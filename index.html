@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT AEGIS | Hero Mortality Initiative</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            cinzel: ['Cinzel', 'serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            void: '#040507',
+            abyss: '#080a0f',
+            panel: '#0e1219',
+            borderDim: '#1a2233',
+            crimson: '#e11d48',
+            crimsonGlow: '#ff1744',
+            cyberCyan: '#00f0ff',
+            slateGhost: '#94a3b8'
+          },
+          animation: {
+            'glitch': 'glitch 4s infinite',
+            'pulse-subtle': 'pulseSubtle 3s ease-in-out infinite',
+            'radar-spin': 'spin 8s linear infinite',
+          },
+          keyframes: {
+            glitch: {
+              '0%, 95%': { transform: 'none', filter: 'none' },
+              '96%': { transform: 'skew(-0.8deg)', filter: 'hue-rotate(40deg)' },
+              '98%': { transform: 'skew(0.6deg)', filter: 'drop-shadow(-2px 0 red)' },
+              '100%': { transform: 'none', filter: 'none' },
+            },
+            pulseSubtle: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '1' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- External Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="min-h-screen flex flex-col selection:bg-rose-950 selection:text-rose-200">
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <canvas id="particleCanvas"></canvas>
+
+  <header class="relative z-50 border-b border-borderDim/70 bg-void/80 backdrop-blur-md px-4 sm:px-8 py-3.5 sticky top-0">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <!-- Left: Logo & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="relative w-8 h-8 rounded bg-abyss border border-rose-900/60 flex items-center justify-center overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-t from-rose-950/50 to-transparent"></div>
+          <div class="w-2 h-2 rounded-full bg-crimson animate-ping"></div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-cinzel tracking-wider text-slate-100 font-bold text-sm sm:text-base animate-glitch">PROJECT AEGIS</span>
+            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">RESEARCH-V4</span>
+          </div>
+          <p class="text-[10px] font-mono text-slate-500 tracking-tight">HERO ARBITRARY TERMINATION MITIGATION PROTOCOL</p>
+        </div>
+      </div>
+
+      <!-- Right: Ambience + SFX Controls -->
+      <div class="flex items-center gap-2 sm:gap-3 relative z-50">
+        <button 
+          id="audioToggle" 
+          type="button"
+          class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2 cursor-pointer select-none"
+        >
+          <span id="audioDot" class="w-2 h-2 rounded-full bg-slate-600 pointer-events-none"></span>
+          <span id="audioText" class="pointer-events-none">AMBIENCE: OFF</span>
+        </button>
+
+        <button 
+          id="sfxToggle" 
+          type="button"
+          class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2 cursor-pointer select-none"
+        >
+          <span id="sfxDot" class="w-2 h-2 rounded-full bg-emerald-500 pointer-events-none"></span>
+          <span id="sfxText" class="pointer-events-none">SFX: ON</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-grow max-w-4xl mx-auto px-4 py-10 sm:py-14 w-full">
+    
+    <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-950/40 border border-rose-900/50 text-rose-400 font-mono text-[11px] mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+        <span>AUTONOMOUS GAME ENGINE HEURISTICS INTAKE</span>
+      </div>
+
+      <h1 class="font-cinzel text-3xl sm:text-4xl md:text-5xl font-black text-slate-100 tracking-tight leading-snug sm:leading-tight mb-4 animate-glitch">
+        HOW DOES PHYSICAL STATE LEAVE AURA?
+      </h1>
+
+      <p class="text-slate-300 text-sm sm:text-base leading-relaxed font-light mb-3">
+        We are constructing an autonomous game system programmed to understand <strong class="text-rose-400 font-medium">how NOT to demise YOURSELF</strong>.
+      </p>
+
+      <p class="text-xs sm:text-sm text-slate-400 font-mono leading-relaxed max-w-xl mx-auto">
+        Most games terminate players through arbitrary trivia—a miscalculated hop, an unseen obstacle, or an expired timer. We need your psychological baseline: 
+        <em class="text-slate-200">If mortality was deliberate and under your control, what would make a demise acceptable, poetic, or justified?</em>
+      </p>
+    </div>
+
+    <div class="bg-panel/90 border border-borderDim rounded-xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rose-600/70 to-transparent"></div>
+
+      <div class="flex items-center justify-between border-b border-borderDim/80 pb-4 mb-6 text-xs font-mono">
+        <div>
+          <span class="text-rose-400 font-bold uppercase tracking-wider block">DISPATCH CONSOLE</span>
+          <span class="text-[11px] text-slate-500">Transmitted directly to secure researcher spreadsheets.</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] text-slate-400 bg-void px-2.5 py-1 rounded border border-borderDim">
+          <svg class="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <span>ENCRYPTED INGESTION</span>
+        </div>
+      </div>
+
+      <form id="heroForm" class="space-y-6" novalidate>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- 1. Full Name (Compulsory) -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label for="fullName" class="text-xs font-mono text-slate-300 uppercase">
+                01. Full Name / Subject Code <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-[10px] font-mono text-rose-400 font-semibold">COMPULSORY</span>
+            </div>
+            <input 
+              type="text" 
+              id="fullName" 
+              name="fullName" 
+              required 
+              placeholder="e.g. Commander Arthur Vance" 
+              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+            />
+            <p id="nameError" class="text-[11px] font-mono text-rose-400 hidden">Identity designation is required.</p>
+          </div>
+
+          <!-- 2. Email (Optional) -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label for="email" class="text-xs font-mono text-slate-300 uppercase">
+                02. Electronic Mail
+              </label>
+              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+            </div>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="vance@aegis-research.org" 
+              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+            />
+            <p id="emailError" class="text-[11px] font-mono text-rose-400 hidden">Please supply a valid electronic mail syntax.</p>
+          </div>
+
+          <!-- 3. Phone (Optional) -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label for="phone" class="text-xs font-mono text-slate-300 uppercase">
+                03. Contact / Secure Line
+              </label>
+              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+            </div>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              placeholder="+1 (555) 019-2831" 
+              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+            />
+          </div>
+
+          <!-- 4. Date of Genesis (Day, Month, Year Dropdowns) -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-xs font-mono text-slate-300 uppercase">
+                04. Date of Genesis (DOB)
+              </label>
+              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <select id="dobDay" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+                <option value="" class="bg-panel text-slate-400">Day</option>
+              </select>
+
+              <select id="dobMonth" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+                <option value="" class="bg-panel text-slate-400">Month</option>
+                <option value="01" class="bg-panel">Jan</option>
+                <option value="02" class="bg-panel">Feb</option>
+                <option value="03" class="bg-panel">Mar</option>
+                <option value="04" class="bg-panel">Apr</option>
+                <option value="05" class="bg-panel">May</option>
+                <option value="06" class="bg-panel">Jun</option>
+                <option value="07" class="bg-panel">Jul</option>
+                <option value="08" class="bg-panel">Aug</option>
+                <option value="09" class="bg-panel">Sep</option>
+                <option value="10" class="bg-panel">Oct</option>
+                <option value="11" class="bg-panel">Nov</option>
+                <option value="12" class="bg-panel">Dec</option>
+              </select>
+
+              <select id="dobYear" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+                <option value="" class="bg-panel text-slate-400">Year</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 5. City (Optional) -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label for="city" class="text-xs font-mono text-slate-300 uppercase">
+                05. Terrestrial City / Sector
+              </label>
+              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+            </div>
+            <input 
+              type="text" 
+              id="city" 
+              name="city" 
+              placeholder="e.g. Kyoto, Seattle, London, Sector 4" 
+              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+            />
+          </div>
+
+          <!-- 6. Employment Status -->
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label for="employment" class="text-xs font-mono text-slate-300 uppercase">
+                06. Current Societal Function
+              </label>
+              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+            </div>
+            <select 
+              id="employment" 
+              name="employment" 
+              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 cursor-pointer"
+            >
+              <option value="" disabled selected class="bg-panel text-slate-500">Select your status</option>
+              <option value="Employed" class="bg-panel">Employed / Active Workforce</option>
+              <option value="Unemployed" class="bg-panel">Unemployed / In Transition</option>
+              <option value="Student" class="bg-panel">Student / Scholar</option>
+              <option value="Freelancer / Contractor" class="bg-panel">Freelance / Specialist</option>
+              <option value="Other / Classified" class="bg-panel">Other / Unspecified</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="pt-4 border-t border-borderDim/70">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+            <label for="reason" class="text-xs font-mono text-rose-300 uppercase font-semibold flex items-center gap-1.5">
+              <span>07. The Justified Demise (Appropriate Reason of Death)</span>
+              <span class="text-rose-500 font-bold">*</span>
+            </label>
+            <span class="text-[10px] font-mono text-rose-400">COMPULSORY</span>
+          </div>
+
+          <p class="text-xs text-slate-400 mb-3 font-sans">
+            Under what specific circumstances is the hero permitted to cease living? Detail the moment, the sacrifice, or the condition.
+          </p>
+
+          <div class="flex flex-wrap gap-2 mb-3">
+            <span class="text-[10px] font-mono text-slate-500 self-center">Archetypes:</span>
+            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Holding the collapsing perimeter gate alone so non-combatants can board the final extraction vessel.">
+              + Rearguard Sacrifice
+            </button>
+            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Surviving every battle and dying peacefully of old age watching the civilization they defended prosper.">
+              + Quiet Senescence
+            </button>
+            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Choosing voluntary oblivion to permanently deactivate a world-eating machine.">
+              + Cosmic Trade-off
+            </button>
+          </div>
+
+          <textarea 
+            id="reason" 
+            name="reason" 
+            rows="4" 
+            required 
+            placeholder="Record the exact sequence of events that justifies hero demise..."
+            class="hud-input w-full px-3.5 py-3 rounded-lg text-sm text-slate-200 placeholder-slate-600 leading-relaxed font-sans"
+          ></textarea>
+          
+          <div class="flex justify-between items-center mt-1.5 text-[11px] font-mono">
+            <p id="reasonError" class="text-rose-400 hidden">You must state the appropriate demise parameters.</p>
+            <div id="charCounter" class="text-slate-500 ml-auto">0 characters logged</div>
+          </div>
+        </div>
+
+        <!-- Feature Consent Checkbox -->
+        <div class="p-4 rounded-lg bg-abyss/80 border border-borderDim hover:border-rose-900/60 transition space-y-2">
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input 
+              type="checkbox" 
+              id="featureConsent" 
+              name="featureConsent" 
+              checked
+              class="mt-1 w-4 h-4 rounded border-borderDim bg-panel text-rose-600 focus:ring-rose-500 focus:ring-offset-void cursor-pointer accent-rose-600"
+            />
+            <div class="text-xs space-y-0.5">
+              <span class="font-mono text-slate-200 font-medium block">
+                Feature my demise directive in the public research memorial / game credits
+              </span>
+              <p class="text-[11px] text-slate-400 font-sans leading-relaxed">
+                If checked, your submission may be commemorated anonymously or by your Subject Name in future game iterations. If unchecked, your transmission remains strictly confidential for research eyes only.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <div class="pt-3">
+          <button 
+            type="submit" 
+            id="submitBtn"
+            class="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-rose-700 via-rose-600 to-red-600 hover:from-rose-600 hover:to-red-500 text-white font-mono text-xs uppercase font-bold tracking-widest transition-all duration-200 shadow-xl shadow-rose-950/60 border border-rose-500/40 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+          >
+            <span id="btnSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span id="btnText">TRANSMIT TO EXPERIMENTAL CORE</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="mt-6 text-center text-xs font-mono text-slate-500 max-w-lg mx-auto">
+      <div class="flex items-center justify-center gap-2 mb-1">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>RESTRICTED ACCESS TOPOLOGY</span>
+      </div>
+      <span>All submissions are ingested into an encrypted private spreadsheet. No public viewing portal or visitor record query exists on this network.</span>
+    </div>
+  </main>
+
+  <!-- Success Confirmation Modal -->
+  <div id="successModal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="max-w-md w-full bg-panel border border-rose-600/80 rounded-xl p-6 sm:p-8 relative shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-500/60 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-950/60">
+        <svg class="w-6 h-6 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+
+      <h3 class="font-cinzel text-xl text-slate-100 font-bold mb-2">TELEMETRY SECURED</h3>
+      <p class="text-xs text-slate-300 mb-4 leading-relaxed font-sans">
+        Mortality condition recorded for <strong id="successSubject" class="text-rose-400"></strong>. The neural heuristic engine has recalibrated against unwarranted hero execution.
+      </p>
+
+      <div class="p-3 bg-void rounded border border-borderDim text-[11px] font-mono text-slate-400 text-left mb-5 space-y-1">
+        <div>Destination: <span class="text-slate-200">Demise SV</span></div>
+        <div>Payload Status: <span class="text-emerald-400 font-semibold">200 INGESTION COMMITTED</span></div>
+      </div>
+
+      <!-- Two Action Buttons -->
+      <div class="space-y-2.5">
+        <!-- 1. Personalized Welcome Button -->
+        <button 
+          id="welcomeUserBtn" 
+          type="button" 
+          class="w-full py-3 px-4 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-mono text-xs uppercase font-bold tracking-wider transition cursor-pointer active:scale-[0.98]"
+        >
+          <span id="welcomeBtnText">Welcome to the World</span>
+        </button>
+
+        <!-- 2. Submit Another Demise Button -->
+        <button 
+          id="submitAnotherBtn" 
+          type="button" 
+          class="w-full py-2.5 px-4 rounded-lg bg-void hover:bg-panel border border-borderDim text-slate-300 font-mono text-xs uppercase font-medium tracking-wider transition cursor-pointer"
+        >
+          Submit Another Demise
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="relative z-20 border-t border-borderDim/70 bg-void/90 px-4 py-5 text-center text-xs font-mono text-slate-500 mt-12">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span>
+        <span>AEGIS MOTOR-COGNITION EXPERIMENT</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <div id="liveClock">SYSTEM TIME: --:--:-- UTC</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- External JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
