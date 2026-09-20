@@ -255,8 +255,18 @@ function playSubmissionSound() {
 }
 
 /* ==========================================================================
-   2. UI CONTROLS, AUDIO VISUALIZER & AUTO-UNLOCK
+   2. UI CONTROLS, AUDIO VISUALIZER & LOCAL PERSISTENCE
    ========================================================================== */
+const STORAGE_KEY_AMBIENCE = 'aegis_ambience_pref';
+const STORAGE_KEY_SFX = 'aegis_sfx_pref';
+const STORAGE_KEY_COOLDOWN = 'aegis_submission_cooldown';
+
+const savedAmbiencePref = localStorage.getItem(STORAGE_KEY_AMBIENCE) === 'true';
+const savedSfxPref = localStorage.getItem(STORAGE_KEY_SFX);
+if (savedSfxPref !== null) {
+  sfxEnabled = savedSfxPref === 'true';
+}
+
 function updateAmbienceUI(active) {
   const audioDot = document.getElementById('audioDot');
   const audioText = document.getElementById('audioText');
@@ -270,6 +280,22 @@ function updateAmbienceUI(active) {
     audioDot.className = 'w-2 h-2 rounded-full bg-slate-600 pointer-events-none';
     audioText.textContent = 'AMBIENCE: OFF';
     audioText.classList.remove('text-rose-400');
+  }
+}
+
+function updateSfxUI(active) {
+  const sfxDot = document.getElementById('sfxDot');
+  const sfxText = document.getElementById('sfxText');
+  if (!sfxDot || !sfxText) return;
+
+  if (active) {
+    sfxDot.className = 'w-2 h-2 rounded-full bg-emerald-500 pointer-events-none';
+    sfxText.textContent = 'SFX: ON';
+    sfxText.classList.add('text-emerald-400');
+  } else {
+    sfxDot.className = 'w-2 h-2 rounded-full bg-slate-600 pointer-events-none';
+    sfxText.textContent = 'SFX: OFF';
+    sfxText.classList.remove('text-emerald-400');
   }
 }
 
@@ -320,10 +346,10 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Auto-start Suspicious Music on first user interaction
+// Auto-start Suspicious Music on first user interaction ONLY if preference is ON
 function autoStartAudioOnFirstInteraction() {
   ensureAudioReady();
-  if (!isPlayingAmbience) {
+  if (savedAmbiencePref && !isPlayingAmbience) {
     startSuspiciousMusic();
   }
   window.removeEventListener('click', autoStartAudioOnFirstInteraction);
@@ -334,9 +360,13 @@ window.addEventListener('click', autoStartAudioOnFirstInteraction, { once: true 
 window.addEventListener('keydown', autoStartAudioOnFirstInteraction, { once: true });
 window.addEventListener('scroll', autoStartAudioOnFirstInteraction, { once: true });
 
-// Setup interactive button handlers
+// Setup interactive button handlers & load states
 document.addEventListener('DOMContentLoaded', () => {
   renderHeaderAudioVisualizer();
+
+  // Apply initial UI states from localStorage
+  updateAmbienceUI(false);
+  updateSfxUI(sfxEnabled);
 
   const audioToggle = document.getElementById('audioToggle');
   const sfxToggle = document.getElementById('sfxToggle');
@@ -347,8 +377,10 @@ document.addEventListener('DOMContentLoaded', () => {
       playButtonClickSound();
       if (!isPlayingAmbience) {
         startSuspiciousMusic();
+        localStorage.setItem(STORAGE_KEY_AMBIENCE, 'true');
       } else {
         stopSuspiciousMusic();
+        localStorage.setItem(STORAGE_KEY_AMBIENCE, 'false');
       }
     });
   }
@@ -357,25 +389,14 @@ document.addEventListener('DOMContentLoaded', () => {
     sfxToggle.addEventListener('click', () => {
       ensureAudioReady();
       sfxEnabled = !sfxEnabled;
-      const sfxDot = document.getElementById('sfxDot');
-      const sfxText = document.getElementById('sfxText');
-
-      if (sfxEnabled) {
-        if (sfxDot) sfxDot.className = 'w-2 h-2 rounded-full bg-emerald-500 pointer-events-none';
-        if (sfxText) {
-          sfxText.textContent = 'SFX: ON';
-          sfxText.classList.add('text-emerald-400');
-        }
-        playButtonClickSound();
-      } else {
-        if (sfxDot) sfxDot.className = 'w-2 h-2 rounded-full bg-slate-600 pointer-events-none';
-        if (sfxText) {
-          sfxText.textContent = 'SFX: OFF';
-          sfxText.classList.remove('text-emerald-400');
-        }
-      }
+      localStorage.setItem(STORAGE_KEY_SFX, String(sfxEnabled));
+      updateSfxUI(sfxEnabled);
+      if (sfxEnabled) playButtonClickSound();
     });
   }
+
+  // Check and restore active cooldown if page is refreshed mid-timer
+  checkSubmissionCooldown();
 
   document.querySelectorAll('button, select').forEach(el => {
     if (el.id !== 'audioToggle' && el.id !== 'sfxToggle') {
@@ -567,7 +588,7 @@ if (canvas) {
 }
 
 /* ==========================================================================
-   5. FORM SUBMISSION, DOSSIER GENERATOR, PNG EXPORTER & WEBHOOK
+   5. FORM SUBMISSION, DOSSIER GENERATOR, RATE LIMITER & WEBHOOK
    ========================================================================== */
 const GOOGLE_SCRIPT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx44vRvB8utPOI03GMsfZFebb8PxefuHXRdTS78kuxpaQJfPhhVQ8FCuPg1PYWicjJP/exec";
 
@@ -663,7 +684,7 @@ function generateDossierPNG(name, designation, timestamp, reason, vector) {
   const w = exportCanvas.width;
   const h = exportCanvas.height;
 
-  // Outer canvas clear & background gradient
+  // Background gradient
   const bgGrad = ctx.createLinearGradient(0, 0, w, h);
   bgGrad.addColorStop(0, '#04060b');
   bgGrad.addColorStop(1, '#0c101d');
@@ -750,6 +771,55 @@ function generateDossierPNG(name, designation, timestamp, reason, vector) {
   link.download = `${designation.replace(/[\/\\]/g, '_')}_DOSSIER.png`;
   link.href = exportCanvas.toDataURL('image/png');
   link.click();
+}
+
+// Submission Cooldown / Anti-Spam Rate Limiter
+let cooldownTimerInterval = null;
+
+function activateSubmissionCooldown(durationSeconds = 60) {
+  const expiryTime = Date.now() + durationSeconds * 1000;
+  localStorage.setItem(STORAGE_KEY_COOLDOWN, String(expiryTime));
+  startCooldownCountdown(durationSeconds);
+}
+
+function startCooldownCountdown(secondsRemaining) {
+  const submitBtn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btnText');
+  if (!submitBtn || !btnText) return;
+
+  submitBtn.disabled = true;
+  submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+  let remaining = secondsRemaining;
+  btnText.textContent = `CORE RE-CALIBRATING: ${remaining}s`;
+
+  if (cooldownTimerInterval) clearInterval(cooldownTimerInterval);
+
+  cooldownTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      btnText.textContent = `CORE RE-CALIBRATING: ${remaining}s`;
+    } else {
+      clearInterval(cooldownTimerInterval);
+      cooldownTimerInterval = null;
+      localStorage.removeItem(STORAGE_KEY_COOLDOWN);
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      btnText.textContent = 'TRANSMIT TO EXPERIMENTAL CORE';
+    }
+  }, 1000);
+}
+
+function checkSubmissionCooldown() {
+  const storedExpiry = localStorage.getItem(STORAGE_KEY_COOLDOWN);
+  if (!storedExpiry) return;
+
+  const diffMs = parseInt(storedExpiry, 10) - Date.now();
+  if (diffMs > 0) {
+    startCooldownCountdown(Math.ceil(diffMs / 1000));
+  } else {
+    localStorage.removeItem(STORAGE_KEY_COOLDOWN);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -888,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitBtn) {
         submitBtn.disabled = false;
         if (btnSpinner) btnSpinner.classList.add('hidden');
-        if (btnText) btnText.textContent = 'TRANSMIT TO EXPERIMENTAL CORE';
+        btnText.textContent = 'TRANSMIT TO EXPERIMENTAL CORE';
       }
 
       // Generate & populate Cryptographic Dossier Token
@@ -945,6 +1015,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (welcomeBtnText) {
         welcomeBtnText.textContent = `${payload.fullName}, Welcome to the World`;
       }
+
+      // Start 60-second cooldown guard
+      activateSubmissionCooldown(60);
 
       // Reveal modal
       if (successModal) successModal.classList.remove('hidden');
