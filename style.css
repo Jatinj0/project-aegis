@@ -72,3 +72,34 @@ select.hud-input option {
 ::-webkit-scrollbar-thumb:hover {
   background: #e11d48;
 }
+
+#threatClassification {
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* --- Glitch / System Breach Transition --- */
+@keyframes screenGlitch {
+  0% { transform: translate(0, 0); filter: drop-shadow(0 0 0 transparent); }
+  20% { transform: translate(-3px, 2px); filter: hue-rotate(90deg) contrast(1.4); }
+  40% { transform: translate(3px, -2px); filter: invert(0.2) saturate(1.8); }
+  60% { transform: translate(-2px, -1px); filter: hue-rotate(270deg); }
+  80% { transform: translate(2px, 2px); filter: contrast(1.2); }
+  100% { transform: translate(0, 0); filter: drop-shadow(0 0 0 transparent); }
+}
+
+.glitch-active {
+  animation: screenGlitch 0.45s ease-in-out forwards;
+}
+
+/* --- Dossier Token Card --- */
+.dossier-card {
+  background: rgba(10, 15, 29, 0.85);
+  border: 1px dashed rgba(225, 29, 72, 0.4);
+  box-shadow: inset 0 0 15px rgba(225, 29, 72, 0.08);
+}
+
+#threatClassification {
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 10px currentColor;
+}

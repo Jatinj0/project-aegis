@@ -1,11 +1,15 @@
 /* ==========================================================================
-   1. PROCEDURAL AUDIO ENGINE (Resilient Context with Mac Autoplay Unlock)
+   1. PROCEDURAL AUDIO ENGINE (Resilient Context with Clean Stop & Reactivity)
    ========================================================================== */
 let audioCtx = null;
 let masterGain = null;
 let droneGain = null;
 let isPlayingAmbience = false;
 let sfxEnabled = true;
+
+// Real-time Audio Analyser for particle visual reactivity
+let analyser = null;
+let audioDataArray = null;
 
 // Drone components
 let oscRoot = null, oscTritone = null, oscShimmer = null;
@@ -18,6 +22,18 @@ function ensureAudioReady() {
     audioCtx = new AudioContextClass();
     masterGain = audioCtx.createGain();
     masterGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+
+    // Attach real-time frequency analyser
+    try {
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.8;
+      audioDataArray = new Uint8Array(analyser.frequencyBinCount);
+      masterGain.connect(analyser);
+    } catch (e) {
+      console.warn('Analyser setup skipped:', e);
+    }
+
     masterGain.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') {
@@ -25,16 +41,10 @@ function ensureAudioReady() {
   }
 }
 
-/* --- 1A. Suspicious Psychological Horror Soundscape --- */
+/* --- 1A. Suspicious Psychological Horror Soundscape (Clean Stop & Restart) --- */
 function startSuspiciousMusic() {
   ensureAudioReady();
-
-  // If already running, clean up first
-  if (droneGain) {
-    try {
-      droneGain.disconnect();
-    } catch(e) {}
-  }
+  stopSuspiciousMusic();
 
   droneGain = audioCtx.createGain();
   droneGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
@@ -81,7 +91,7 @@ function startSuspiciousMusic() {
   oscShimmer.start();
   tapeLfo.start();
 
-  // Subtle metallic screech every 8.5 seconds
+  // Reset tension timer
   if (tensionTimer) clearInterval(tensionTimer);
   tensionTimer = setInterval(() => {
     if (isPlayingAmbience && audioCtx && audioCtx.state === 'running') {
@@ -121,22 +131,34 @@ function playTensionCreak() {
 }
 
 function stopSuspiciousMusic() {
-  if (!audioCtx || !droneGain) return;
-  droneGain.gain.setValueAtTime(droneGain.gain.value, audioCtx.currentTime);
-  droneGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.8);
-  if (tensionTimer) clearInterval(tensionTimer);
-
-  setTimeout(() => {
-    try {
-      if (oscRoot) oscRoot.stop();
-      if (oscTritone) oscTritone.stop();
-      if (oscShimmer) oscShimmer.stop();
-      if (tapeLfo) tapeLfo.stop();
-    } catch (e) {}
-  }, 900);
+  if (tensionTimer) {
+    clearInterval(tensionTimer);
+    tensionTimer = null;
+  }
 
   isPlayingAmbience = false;
   updateAmbienceUI(false);
+
+  if (!audioCtx || !droneGain) return;
+
+  try {
+    const now = audioCtx.currentTime;
+    droneGain.gain.cancelScheduledValues(now);
+    droneGain.gain.setValueAtTime(droneGain.gain.value, now);
+    droneGain.gain.exponentialRampToValueAtTime(0.00001, now + 0.3);
+  } catch (e) {
+    droneGain.gain.value = 0;
+  }
+
+  setTimeout(() => {
+    try {
+      if (oscRoot) { oscRoot.stop(); oscRoot.disconnect(); oscRoot = null; }
+      if (oscTritone) { oscTritone.stop(); oscTritone.disconnect(); oscTritone = null; }
+      if (oscShimmer) { oscShimmer.stop(); oscShimmer.disconnect(); oscShimmer = null; }
+      if (tapeLfo) { tapeLfo.stop(); tapeLfo.disconnect(); tapeLfo = null; }
+      if (droneGain) { droneGain.disconnect(); droneGain = null; }
+    } catch (e) {}
+  }, 350);
 }
 
 /* --- 1B. Audible Terminal Keystroke Typing Sound --- */
@@ -149,7 +171,6 @@ function playTypingSound() {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
-    // Crisp metallic keystroke click with randomized pitch
     const freq = 1400 + Math.random() * 900;
     osc.type = 'square';
     osc.frequency.setValueAtTime(freq, now);
@@ -197,7 +218,6 @@ function playSubmissionSound() {
     ensureAudioReady();
     const now = audioCtx.currentTime;
 
-    // Deep sub-drop
     const boomOsc = audioCtx.createOscillator();
     const boomGain = audioCtx.createGain();
     boomOsc.type = 'sine';
@@ -212,7 +232,6 @@ function playSubmissionSound() {
     boomOsc.start(now);
     boomOsc.stop(now + 1.6);
 
-    // Eerie descending discordant chord
     const chimeOsc = audioCtx.createOscillator();
     const chimeGain = audioCtx.createGain();
     chimeOsc.type = 'sawtooth';
@@ -260,6 +279,9 @@ document.addEventListener('keydown', (e) => {
   const target = e.target;
   if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
     playTypingSound();
+    if (typeof triggerShockwave === 'function') {
+      triggerShockwave(window.innerWidth / 2, window.innerHeight * 0.75, 0.25);
+    }
   }
 });
 
@@ -339,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
           reasonEl.value += ' ' + insertText;
         }
         updateCount();
+        if (typeof updateThreatVector === 'function') {
+          updateThreatVector(reasonEl.value);
+        }
         reasonEl.focus();
       }
     });
@@ -381,13 +406,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   4. CANVAS ASH & EMBER PARTICLES
+   4. AUDIO-REACTIVE CANVAS ASH, EMBER & SHOCKWAVE ENGINE
    ========================================================================== */
+let shockwaveActive = false;
+let shockwaveRadius = 0;
+let shockwaveOrigin = { x: 0, y: 0 };
+let particles = [];
+
+function triggerShockwave(originX, originY, intensity = 1.0) {
+  shockwaveActive = true;
+  shockwaveRadius = 10;
+  shockwaveOrigin = {
+    x: originX || window.innerWidth / 2,
+    y: originY || window.innerHeight / 2
+  };
+
+  particles.forEach(p => {
+    const dx = p.x - shockwaveOrigin.x;
+    const dy = p.y - shockwaveOrigin.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    const force = (Math.max(0, 600 - dist) / 600) * 14 * intensity;
+    p.vx = (dx / dist) * force + (Math.random() - 0.5) * 2;
+    p.vy = (dy / dist) * force - Math.random() * 3;
+    p.radius = Math.min(p.baseRadius * 2.5, 6);
+  });
+}
+window.triggerShockwave = triggerShockwave;
+
 const canvas = document.getElementById('particleCanvas');
 if (canvas) {
   const ctx = canvas.getContext('2d');
   let width, height;
-  let particles = [];
 
   function resize() {
     width = window.innerWidth;
@@ -405,48 +454,84 @@ if (canvas) {
     reset() {
       this.x = Math.random() * width;
       this.y = Math.random() * height;
-      this.radius = Math.random() * 1.8 + 0.3;
-      this.speedY = -Math.random() * 0.4 - 0.05;
+      this.baseRadius = Math.random() * 1.8 + 0.4;
+      this.radius = this.baseRadius;
+      this.speedY = -Math.random() * 0.4 - 0.08;
       this.speedX = (Math.random() - 0.5) * 0.2;
+      this.vx = 0;
+      this.vy = 0;
       this.alpha = Math.random() * 0.35 + 0.08;
-      this.color = Math.random() > 0.88 ? '225, 29, 72' : '100, 116, 139';
+      this.color = Math.random() > 0.85 ? '225, 29, 72' : '100, 116, 139';
     }
-    update() {
-      this.y += this.speedY;
-      this.x += this.speedX;
-      if (this.y < -10 || this.x < -10 || this.x > width + 10) {
+    update(audioBoost) {
+      this.y += (this.speedY + this.vy) - (audioBoost * 1.8);
+      this.x += (this.speedX + this.vx);
+
+      if (this.vx) this.vx *= 0.94;
+      if (this.vy) this.vy *= 0.94;
+
+      if (this.y < -10 || this.x < -20 || this.x > width + 20) {
         this.reset();
         this.y = height + 10;
       }
     }
-    draw() {
+    draw(audioBoost) {
+      const reactiveRadius = Math.max(0.2, this.radius * (1 + audioBoost * 0.8));
+      const reactiveAlpha = Math.min(1.0, this.alpha + (audioBoost * 0.25));
+
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
-      ctx.shadowBlur = 3;
-      ctx.shadowColor = `rgba(${this.color}, 0.3)`;
+      ctx.arc(this.x, this.y, reactiveRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color}, ${reactiveAlpha})`;
+      ctx.shadowBlur = 4 + (audioBoost * 12);
+      ctx.shadowColor = `rgba(${this.color}, ${0.4 + audioBoost * 0.4})`;
       ctx.fill();
     }
   }
 
-  const particleCount = Math.min(Math.floor(window.innerWidth / 22), 60);
+  const particleCount = Math.min(Math.floor(window.innerWidth / 20), 65);
   for (let i = 0; i < particleCount; i++) {
     particles.push(new AshParticle());
   }
 
   function renderParticles() {
     ctx.clearRect(0, 0, width, height);
-    for (let i = 0; i < particles.length; i++) {
-      particles[i].update();
-      particles[i].draw();
+
+    let audioBoost = 0;
+    if (analyser && audioDataArray) {
+      analyser.getByteFrequencyData(audioDataArray);
+      const lowFreqSum = audioDataArray[1] + audioDataArray[2] + audioDataArray[3];
+      audioBoost = (lowFreqSum / 3) / 255;
     }
+
+    if (shockwaveActive) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(shockwaveOrigin.x, shockwaveOrigin.y, shockwaveRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(225, 29, 72, ${Math.max(0, 1 - shockwaveRadius / 600)})`;
+      ctx.lineWidth = 2.5;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(225, 29, 72, 0.8)';
+      ctx.stroke();
+      ctx.restore();
+
+      shockwaveRadius += 18;
+      if (shockwaveRadius > 600) {
+        shockwaveActive = false;
+      }
+    }
+
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].update(audioBoost);
+      particles[i].draw(audioBoost);
+    }
+
     requestAnimationFrame(renderParticles);
   }
   renderParticles();
 }
 
 /* ==========================================================================
-   5. FORM SUBMISSION & GOOGLE APPS SCRIPT WEBHOOK
+   5. FORM SUBMISSION, DOSSIER GENERATOR & GOOGLE APPS SCRIPT WEBHOOK
    ========================================================================== */
 const GOOGLE_SCRIPT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx44vRvB8utPOI03GMsfZFebb8PxefuHXRdTS78kuxpaQJfPhhVQ8FCuPg1PYWicjJP/exec";
 
@@ -458,10 +543,102 @@ function updateCount() {
   }
 }
 
+// Procedural Dossier Token Generator
+function generateDossierToken(name) {
+  const sectors = ['ALPHA', 'SIGMA', 'DELTA', 'OMEGA', 'NEXUS', 'VOID', 'EPSILON'];
+  const randomSector = sectors[Math.floor(Math.random() * sectors.length)];
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  const now = new Date().toISOString().replace('T', ' // ').slice(0, 22) + ' UTC';
+
+  return {
+    subjectId: `AEGIS-SUB-${randomNum}//${randomSector}`,
+    timestamp: now,
+    formattedText: `[PROJECT AEGIS // ARCHIVED DOSSIER]\nSUBJECT: ${name.toUpperCase()}\nID: AEGIS-SUB-${randomNum}//${randomSector}\nTIMESTAMP: ${now}\nCLEARANCE: COMMITTED TO EXPERIMENTAL CORE`
+  };
+}
+
+// Threat Vector Classification Engine
+const threatClassifications = [
+  {
+    regex: /(sacrifice|shield|protect|save|fall for|give life|martyr)/i,
+    label: "MARTYRDOM DIRECTIVE",
+    color: "#f43f5e",
+    dot: "bg-rose-500"
+  },
+  {
+    regex: /(time|age|old|forgotten|decay|slow|rot|entropy)/i,
+    label: "ENTROPIC OBSOLESCENCE",
+    color: "#eab308",
+    dot: "bg-yellow-500"
+  },
+  {
+    regex: /(void|singularity|abyss|crush|black hole|vacuum|oblivion)/i,
+    label: "GRAVITATIONAL SINGULARITY",
+    color: "#a855f7",
+    dot: "bg-purple-500"
+  },
+  {
+    regex: /(blast|burn|fire|explosion|ashes|incinerat|vaporiz|nuke)/i,
+    label: "CATASTROPHIC INCINERATION",
+    color: "#f97316",
+    dot: "bg-orange-500"
+  },
+  {
+    regex: /(peace|sleep|quiet|rest|settle|tired|exhaust|walk away)/i,
+    label: "VOLUNTARY TERMINATION",
+    color: "#38bdf8",
+    dot: "bg-sky-400"
+  }
+];
+
+function updateThreatVector(text) {
+  const labelEl = document.getElementById("threatClassification");
+  const dotEl = document.getElementById("threatDot");
+  if (!labelEl || !dotEl) return;
+
+  if (!text.trim() || text.length < 5) {
+    labelEl.textContent = "AWAITING TELEMETRY...";
+    labelEl.style.color = "#94a3b8";
+    dotEl.className = "w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse";
+    return;
+  }
+
+  const matched = threatClassifications.find(item => item.regex.test(text));
+
+  if (matched) {
+    labelEl.textContent = matched.label;
+    labelEl.style.color = matched.color;
+    dotEl.className = `w-1.5 h-1.5 rounded-full ${matched.dot} animate-ping`;
+    setTimeout(() => {
+      dotEl.className = `w-1.5 h-1.5 rounded-full ${matched.dot}`;
+    }, 400);
+  } else {
+    labelEl.textContent = "ANOMALOUS PATHWAY";
+    labelEl.style.color = "#34d399";
+    dotEl.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const heroForm = document.getElementById('heroForm');
   const reason = document.getElementById('reason');
-  if (reason) reason.addEventListener('input', updateCount);
+
+  if (reason) {
+    reason.addEventListener('input', () => {
+      updateCount();
+      updateThreatVector(reason.value);
+    });
+
+    // Quick Submit Shortcut (Cmd/Ctrl + Enter) from narrative field
+    reason.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (heroForm) {
+          heroForm.requestSubmit();
+        }
+      }
+    });
+  }
 
   if (heroForm) {
     heroForm.addEventListener('submit', async (e) => {
@@ -514,8 +691,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!isValid) return;
 
-      // Play dramatic demise stinger
+      // Play submission sound & blast shockwave
       playSubmissionSound();
+      if (typeof triggerShockwave === 'function') {
+        triggerShockwave(window.innerWidth / 2, window.innerHeight / 2, 2.2);
+      }
+
+      // Trigger CRT Screen Glitch Transition
+      document.body.classList.add('glitch-active');
+      setTimeout(() => document.body.classList.remove('glitch-active'), 450);
 
       // Assemble Date of Genesis
       const selectedDay = document.getElementById('dobDay')?.value || '';
@@ -533,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         combinedDob = [selectedDay, selectedMonth, selectedYear].filter(Boolean).join('/');
       }
 
-      // Read Feature Consent Checkbox directly before sending
+      // Read Feature Consent Checkbox
       const featureCheckbox = document.getElementById('featureConsent');
       const isFeatureApproved = featureCheckbox ? featureCheckbox.checked : false;
       const consentString = isFeatureApproved ? 'Yes' : 'No';
@@ -574,6 +758,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnText) btnText.textContent = 'TRANSMIT TO EXPERIMENTAL CORE';
       }
 
+      // Generate & populate Cryptographic Dossier Token
+      const dossier = generateDossierToken(payload.fullName);
+      const tokenSubjectId = document.getElementById('tokenSubjectId');
+      const tokenTimestamp = document.getElementById('tokenTimestamp');
+      const copyTokenBtn = document.getElementById('copyTokenBtn');
+      const copyTokenText = document.getElementById('copyTokenText');
+
+      if (tokenSubjectId) tokenSubjectId.textContent = dossier.subjectId;
+      if (tokenTimestamp) tokenTimestamp.textContent = dossier.timestamp;
+
+      if (copyTokenBtn) {
+        copyTokenBtn.onclick = () => {
+          navigator.clipboard.writeText(dossier.formattedText).then(() => {
+            playButtonClickSound();
+            if (copyTokenText) copyTokenText.textContent = '✓ TOKEN COPIED TO CLIPBOARD';
+            setTimeout(() => {
+              if (copyTokenText) copyTokenText.textContent = '📋 Copy Dossier Token';
+            }, 2500);
+          });
+        };
+      }
+
       // Update modal text with user's name
       if (successSubject) successSubject.textContent = payload.fullName;
       if (welcomeBtnText) {
@@ -594,6 +800,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (successModal) successModal.classList.add('hidden');
       heroForm.reset();
       updateCount();
+      if (typeof updateThreatVector === 'function') {
+        updateThreatVector('');
+      }
     });
   }
 
@@ -606,7 +815,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (successModal) successModal.classList.add('hidden');
       heroForm.reset();
       updateCount();
-      // Scroll smoothly back to top of form & focus name input
+      if (typeof updateThreatVector === 'function') {
+        updateThreatVector('');
+      }
       document.getElementById('fullName')?.focus();
       window.scrollTo({ top: 180, behavior: 'smooth' });
     });

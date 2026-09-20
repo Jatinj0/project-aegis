@@ -2,6 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+
+    <!-- Primary Meta Tags -->
+  <title>PROJECT AEGIS // Hero Mortality Intake Protocol</title>
+  <meta name="title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
+  <meta name="description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
+
+  <!-- Open Graph / Facebook / Discord / LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aegis-demise.netlify.app/">
+  <meta property="og:title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
+  <meta property="og:description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://aegis-demise.netlify.app/">
+  <meta property="twitter:title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
+  <meta property="twitter:description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
+  <meta property="twitter:image" content="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80">
+
+  <!-- Terminal Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0f1d'/%3E%3Cpolygon points='50,15 85,78 15,78' fill='none' stroke='%23e11d48' stroke-width='8'/%3E%3Ccircle cx='50' cy='52' r='8' fill='%23e11d48'/%3E%3C/svg%3E">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJECT AEGIS | Hero Mortality Initiative</title>
 
@@ -269,6 +292,15 @@
               <option value="Other / Classified" class="bg-panel">Other / Unspecified</option>
             </select>
           </div>
+          <!-- Live Threat Vector Diagnostic Badge -->
+          <div class="flex items-center justify-between mb-2">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-black/60 border border-slate-800 text-[11px] font-mono tracking-wider">
+              <span id="threatDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 transition-colors duration-300"></span>
+              <span class="text-slate-400">VECTOR:</span>
+              <span id="threatClassification" class="text-emerald-400 font-semibold transition-colors duration-300">ANALYZING BIOMETRICS...</span>
+            </div>
+            <!-- Keep your existing character counter here -->
+          </div>  
 
         </div>
 
@@ -373,6 +405,22 @@
       <div class="p-3 bg-void rounded border border-borderDim text-[11px] font-mono text-slate-400 text-left mb-5 space-y-1">
         <div>Destination: <span class="text-slate-200">Demise SV</span></div>
         <div>Payload Status: <span class="text-emerald-400 font-semibold">200 INGESTION COMMITTED</span></div>
+      </div>
+      
+<!-- Cryptographic Dossier Token Display -->
+      <div class="dossier-card p-3.5 rounded mb-5 text-left font-mono">
+        <div class="flex items-center justify-between text-[10px] text-slate-400 mb-2 border-b border-slate-800 pb-1.5">
+          <span class="tracking-widest">RECORD // ARCHIVAL TELEMETRY</span>
+          <span class="text-rose-400 animate-pulse">ENCRYPTED</span>
+        </div>
+        <div class="text-xs space-y-1 text-slate-300">
+          <div><span class="text-slate-500">SUBJECT DESIGNATION:</span> <span id="tokenSubjectId" class="text-rose-400 font-bold">---</span></div>
+          <div><span class="text-slate-500">INGEST TIMESTAMP:</span> <span id="tokenTimestamp" class="text-slate-200">---</span></div>
+          <div><span class="text-slate-500">CLEARANCE STATUS:</span> <span class="text-emerald-400 font-semibold">TERMINAL LOG COMMITTED</span></div>
+        </div>
+        <button type="button" id="copyTokenBtn" class="mt-3 w-full py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] rounded tracking-wider uppercase transition flex items-center justify-center gap-2">
+          <span id="copyTokenText">📋 Copy Dossier Token</span>
+        </button>
       </div>
 
       <!-- Two Action Buttons -->
