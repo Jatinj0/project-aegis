@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-    <!-- Primary Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJECT AEGIS // Hero Mortality Intake Protocol</title>
+
+  <!-- Primary Meta Tags -->
   <meta name="title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
   <meta name="description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
 
@@ -24,9 +25,6 @@
 
   <!-- Terminal Favicon SVG -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0f1d'/%3E%3Cpolygon points='50,15 85,78 15,78' fill='none' stroke='%23e11d48' stroke-width='8'/%3E%3Ccircle cx='50' cy='52' r='8' fill='%23e11d48'/%3E%3C/svg%3E">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PROJECT AEGIS | Hero Mortality Initiative</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -111,6 +109,17 @@
           class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2 cursor-pointer select-none"
         >
           <span id="audioDot" class="w-2 h-2 rounded-full bg-slate-600 pointer-events-none"></span>
+          <span id="audioText" class="pointer-events-none">AMBIENCE: OFF</span>
+        </button>
+
+        <button 
+  id="audioToggle" 
+  type="button"
+  class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2 cursor-pointer select-none"
+>
+          <span id="audioDot" class="w-2 h-2 rounded-full bg-slate-600 pointer-events-none"></span>
+          <!-- Mini Real-Time Audio Oscilloscope Canvas -->
+          <canvas id="audioVisualizer" width="48" height="12" class="opacity-60 pointer-events-none"></canvas>
           <span id="audioText" class="pointer-events-none">AMBIENCE: OFF</span>
         </button>
 
@@ -292,14 +301,14 @@
               <option value="Other / Classified" class="bg-panel">Other / Unspecified</option>
             </select>
           </div>
+
           <!-- Live Threat Vector Diagnostic Badge -->
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-2 md:col-span-2">
             <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-black/60 border border-slate-800 text-[11px] font-mono tracking-wider">
               <span id="threatDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 transition-colors duration-300"></span>
               <span class="text-slate-400">VECTOR:</span>
               <span id="threatClassification" class="text-emerald-400 font-semibold transition-colors duration-300">ANALYZING BIOMETRICS...</span>
             </div>
-            <!-- Keep your existing character counter here -->
           </div>  
 
         </div>
@@ -335,7 +344,7 @@
             name="reason" 
             rows="4" 
             required 
-            placeholder="Record the exact sequence of events that justifies hero demise..."
+            placeholder="Record the exact sequence of events that justifies hero demise... (Press Cmd/Ctrl + Enter to quick submit)"
             class="hud-input w-full px-3.5 py-3 rounded-lg text-sm text-slate-200 placeholder-slate-600 leading-relaxed font-sans"
           ></textarea>
           
@@ -407,7 +416,7 @@
         <div>Payload Status: <span class="text-emerald-400 font-semibold">200 INGESTION COMMITTED</span></div>
       </div>
       
-<!-- Cryptographic Dossier Token Display -->
+      <!-- Cryptographic Dossier Token Display -->
       <div class="dossier-card p-3.5 rounded mb-5 text-left font-mono">
         <div class="flex items-center justify-between text-[10px] text-slate-400 mb-2 border-b border-slate-800 pb-1.5">
           <span class="tracking-widest">RECORD // ARCHIVAL TELEMETRY</span>
@@ -421,11 +430,13 @@
         <button type="button" id="copyTokenBtn" class="mt-3 w-full py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] rounded tracking-wider uppercase transition flex items-center justify-center gap-2">
           <span id="copyTokenText">📋 Copy Dossier Token</span>
         </button>
+        <button type="button" id="exportCardBtn" class="mt-2 w-full py-1.5 px-3 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-[11px] rounded tracking-wider uppercase transition flex items-center justify-center gap-2">
+          <span id="exportCardText">💾 Export Classified Dossier (.PNG)</span>
+        </button>
       </div>
 
       <!-- Two Action Buttons -->
       <div class="space-y-2.5">
-        <!-- 1. Personalized Welcome Button -->
         <button 
           id="welcomeUserBtn" 
           type="button" 
@@ -434,7 +445,6 @@
           <span id="welcomeBtnText">Welcome to the World</span>
         </button>
 
-        <!-- 2. Submit Another Demise Button -->
         <button 
           id="submitAnotherBtn" 
           type="button" 
@@ -459,7 +469,88 @@
     </div>
   </footer>
 
+  <!-- Floating Terminal Trigger -->
+  <button id="terminalToggleBtn" type="button" class="fixed bottom-6 right-6 z-40 px-3 py-1.5 rounded bg-black/80 border border-rose-500/40 text-rose-400 font-mono text-xs tracking-wider flex items-center gap-2 hover:bg-rose-950/40 shadow-lg shadow-rose-950/50 transition">
+    <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+    <span>[~] CODEX CONSOLE</span>
+  </button>
+
+  <!-- Slide-Out Classified Archive Terminal -->
+  <div id="codexDrawer" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden font-mono">
+    <div class="w-full max-w-3xl bg-[#090d16] border border-rose-500/40 rounded-lg shadow-2xl overflow-hidden flex flex-col h-[520px]">
+      
+      <!-- Terminal Header Bar -->
+      <div class="px-4 py-2 bg-slate-900/80 border-b border-rose-950 flex items-center justify-between text-xs text-slate-400">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+          <span class="text-rose-400 font-bold">AEGIS_MAINFRAME // CODEX v4.2</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-slate-500">SECTOR_FEED: ACTIVE</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button type="button" id="codexHelpHint" class="text-rose-400 hover:text-rose-300 font-mono tracking-wider transition underline underline-offset-4 decoration-rose-500/40">HELP</button>
+          <button id="closeCodexBtn" class="text-slate-500 hover:text-rose-400 transition font-mono">ESC / [X]</button>
+        </div>
+      </div>
+
+      <!-- Output Stream Area -->
+      <div id="codexOutput" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs text-slate-300 leading-relaxed font-mono">
+        <div class="text-slate-500">> INITIALIZING CLASSIFIED MEMORIAL CORE...</div>
+        <div class="text-emerald-400">> TELEMETRY LINK ESTABLISHED. TYPE <span class="text-white font-bold">'help'</span> FOR COMMAND MATRIX.</div>
+        <div class="border-b border-slate-800 my-2"></div>
+        <div id="feedStream" class="space-y-2">
+          <div class="text-slate-500 animate-pulse">> FETCHING ARCHIVED FIELD TRANSMISSIONS...</div>
+        </div>
+      </div>
+
+      <!-- Interactive Prompt Input -->
+      <div class="p-3 bg-black/60 border-t border-slate-800 flex items-center gap-2">
+        <span class="text-rose-500 font-bold">AEGIS></span>
+        <input type="text" id="codexInput" placeholder="Enter command (try: 'feed', 'purge', 'lore', 'stats', 'clear')..." 
+              class="flex-1 bg-transparent border-none text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-600" autocomplete="off" />
+      </div>
+    </div>
+  </div>
+
+    <!-- Purge Protocol System Lockdown Overlay -->
+  <div id="purgeDecisionModal" style="display: none; position: fixed; inset: 0; z-index: 999999; background: rgba(0, 0, 0, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); align-items: center; justify-content: center; padding: 1rem; font-family: monospace;">
+    <div style="width: 100%; max-width: 28rem; background: #0b0f19; border: 2px solid rgba(225, 29, 72, 0.85); padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 0 60px rgba(225, 29, 72, 0.45); text-align: center; position: relative; overflow: hidden; margin: auto;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #e11d48, transparent);"></div>
+      
+      <div class="text-rose-500 text-xs font-bold tracking-widest uppercase mb-3 animate-pulse">
+        [SYSTEM ANOMALY // BOUNDARY FAILURE]
+      </div>
+      
+      <p class="text-slate-200 text-sm leading-relaxed mb-6 font-semibold italic">
+        "You are purged the boundries of digital verse, cause that cause you."
+      </p>
+
+      <div id="purgeLoadingState" class="my-4 text-xs text-emerald-400 font-mono tracking-wider items-center justify-center gap-2" style="display: none;">
+        <svg class="animate-spin h-4 w-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>RE-ALIGNING TIMELINE VECTORS...</span>
+      </div>
+
+      <div id="purgeActionButtons" class="grid grid-cols-2 gap-3">
+        <button type="button" id="purgeAcceptBtn" class="py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs tracking-wider uppercase rounded transition font-bold cursor-pointer">
+          Accept
+        </button>
+        <button type="button" id="purgeDestroyBtn" class="py-2.5 px-4 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/50 text-rose-300 text-xs tracking-wider uppercase rounded transition font-bold cursor-pointer">
+          Destroy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulated Total Black Screen Shutdown -->
+  <div id="shutdownScreen" class="fixed inset-0 bg-black z-[10000] cursor-none pointer-events-auto select-none" style="display: none;"></div>
+
   <!-- External JavaScript -->
   <script src="script.js"></script>
+
+  <!-- Hidden Offscreen Canvas for Generating Dossier Cards -->
+  <canvas id="dossierExportCanvas" width="800" height="420" class="hidden"></canvas>
 </body>
 </html>

@@ -7,7 +7,7 @@ let droneGain = null;
 let isPlayingAmbience = false;
 let sfxEnabled = true;
 
-// Real-time Audio Analyser for particle visual reactivity
+// Real-time Audio Analyser for particle & equalizer visual reactivity
 let analyser = null;
 let audioDataArray = null;
 
@@ -255,7 +255,7 @@ function playSubmissionSound() {
 }
 
 /* ==========================================================================
-   2. UI CONTROLS & AUTO-UNLOCK
+   2. UI CONTROLS, AUDIO VISUALIZER & AUTO-UNLOCK
    ========================================================================== */
 function updateAmbienceUI(active) {
   const audioDot = document.getElementById('audioDot');
@@ -273,6 +273,41 @@ function updateAmbienceUI(active) {
   }
 }
 
+// Header Micro-Oscilloscope Loop
+function renderHeaderAudioVisualizer() {
+  const visCanvas = document.getElementById('audioVisualizer');
+  if (!visCanvas) return;
+  const visCtx = visCanvas.getContext('2d');
+
+  function draw() {
+    requestAnimationFrame(draw);
+    visCtx.clearRect(0, 0, visCanvas.width, visCanvas.height);
+
+    if (!isPlayingAmbience || !analyser || !audioDataArray) {
+      visCtx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+      visCtx.fillRect(0, visCanvas.height / 2 - 0.5, visCanvas.width, 1);
+      return;
+    }
+
+    analyser.getByteFrequencyData(audioDataArray);
+    const barWidth = 3;
+    const barGap = 2;
+    const totalBars = 8;
+    let x = 0;
+
+    for (let i = 0; i < totalBars; i++) {
+      const val = audioDataArray[i * 2] || 0;
+      const barHeight = Math.max(1, (val / 255) * visCanvas.height);
+      const y = visCanvas.height - barHeight;
+
+      visCtx.fillStyle = '#f43f5e';
+      visCtx.fillRect(x, y, barWidth, barHeight);
+      x += barWidth + barGap;
+    }
+  }
+  draw();
+}
+
 // Global click and typing audio hooks
 document.addEventListener('keydown', (e) => {
   ensureAudioReady();
@@ -285,7 +320,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Auto-start Suspicious Music on the very first user interaction
+// Auto-start Suspicious Music on first user interaction
 function autoStartAudioOnFirstInteraction() {
   ensureAudioReady();
   if (!isPlayingAmbience) {
@@ -301,6 +336,8 @@ window.addEventListener('scroll', autoStartAudioOnFirstInteraction, { once: true
 
 // Setup interactive button handlers
 document.addEventListener('DOMContentLoaded', () => {
+  renderHeaderAudioVisualizer();
+
   const audioToggle = document.getElementById('audioToggle');
   const sfxToggle = document.getElementById('sfxToggle');
 
@@ -340,7 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Click sounds for all interactive buttons & selects
   document.querySelectorAll('button, select').forEach(el => {
     if (el.id !== 'audioToggle' && el.id !== 'sfxToggle') {
       el.addEventListener('click', () => {
@@ -481,9 +517,9 @@ if (canvas) {
 
       ctx.beginPath();
       ctx.arc(this.x, this.y, reactiveRadius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${this.color}, ${reactiveAlpha})`;
+      ctx.fillStyle = `rgba(${this.color},${reactiveAlpha})`;
       ctx.shadowBlur = 4 + (audioBoost * 12);
-      ctx.shadowColor = `rgba(${this.color}, ${0.4 + audioBoost * 0.4})`;
+      ctx.shadowColor = `rgba(${this.color},${0.4 + audioBoost * 0.4})`;
       ctx.fill();
     }
   }
@@ -531,7 +567,7 @@ if (canvas) {
 }
 
 /* ==========================================================================
-   5. FORM SUBMISSION, DOSSIER GENERATOR & GOOGLE APPS SCRIPT WEBHOOK
+   5. FORM SUBMISSION, DOSSIER GENERATOR, PNG EXPORTER & WEBHOOK
    ========================================================================== */
 const GOOGLE_SCRIPT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx44vRvB8utPOI03GMsfZFebb8PxefuHXRdTS78kuxpaQJfPhhVQ8FCuPg1PYWicjJP/exec";
 
@@ -553,7 +589,7 @@ function generateDossierToken(name) {
   return {
     subjectId: `AEGIS-SUB-${randomNum}//${randomSector}`,
     timestamp: now,
-    formattedText: `[PROJECT AEGIS // ARCHIVED DOSSIER]\nSUBJECT: ${name.toUpperCase()}\nID: AEGIS-SUB-${randomNum}//${randomSector}\nTIMESTAMP: ${now}\nCLEARANCE: COMMITTED TO EXPERIMENTAL CORE`
+    formattedText: `[PROJECT AEGIS // ARCHIVED DOSSIER]\nSUBJECT: ${name.toUpperCase()}\nID: AEGIS-SUB-${randomNum}//${randomSector}\nTIMESTAMP:${now}\nCLEARANCE: COMMITTED TO EXPERIMENTAL CORE`
   };
 }
 
@@ -619,6 +655,103 @@ function updateThreatVector(text) {
   }
 }
 
+// High-Resolution Cyberpunk Dossier PNG Exporter
+function generateDossierPNG(name, designation, timestamp, reason, vector) {
+  const exportCanvas = document.getElementById('dossierExportCanvas');
+  if (!exportCanvas) return;
+  const ctx = exportCanvas.getContext('2d');
+  const w = exportCanvas.width;
+  const h = exportCanvas.height;
+
+  // Outer canvas clear & background gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+  bgGrad.addColorStop(0, '#04060b');
+  bgGrad.addColorStop(1, '#0c101d');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Outer border & Grid lines
+  ctx.strokeStyle = '#e11d48';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(16, 16, w - 32, h - 32);
+
+  ctx.strokeStyle = 'rgba(225, 29, 72, 0.15)';
+  ctx.lineWidth = 1;
+  for (let i = 40; i < h - 40; i += 24) {
+    ctx.beginPath();
+    ctx.moveTo(32, i);
+    ctx.lineTo(w - 32, i);
+    ctx.stroke();
+  }
+
+  // Header Bar
+  ctx.fillStyle = '#e11d48';
+  ctx.fillRect(32, 32, w - 64, 38);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 16px monospace';
+  ctx.fillText('PROJECT AEGIS // CLASSIFIED MORTALITY DOSSIER', 48, 56);
+
+  ctx.fillStyle = '#0a0f1d';
+  ctx.fillRect(w - 180, 36, 130, 28);
+  ctx.fillStyle = '#f43f5e';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText('SECTOR LOGGED', w - 165, 54);
+
+  // Subject Information
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px monospace';
+  ctx.fillText('SUBJECT DESIGNATION:', 48, 110);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 20px monospace';
+  ctx.fillText(name.toUpperCase(), 48, 136);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px monospace';
+  ctx.fillText('IDENTITY CODE:', 48, 175);
+  ctx.fillStyle = '#f43f5e';
+  ctx.font = 'bold 15px monospace';
+  ctx.fillText(designation, 48, 195);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px monospace';
+  ctx.fillText('THREAT VECTOR:', 420, 175);
+  ctx.fillStyle = '#34d399';
+  ctx.font = 'bold 15px monospace';
+  ctx.fillText(vector.toUpperCase(), 420, 195);
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px monospace';
+  ctx.fillText('TELEMETRY TIMESTAMP:', 48, 235);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = '13px monospace';
+  ctx.fillText(timestamp, 48, 255);
+
+  // Demise Reason Blockquote
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+  ctx.fillRect(48, 280, w - 96, 75);
+  ctx.strokeStyle = '#334155';
+  ctx.strokeRect(48, 280, w - 96, 75);
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = 'italic 13px monospace';
+  const cleanReason = reason.length > 90 ? reason.substring(0, 87) + '...' : reason;
+  ctx.fillText(`"${cleanReason}"`, 64, 322);
+
+  // Simulated Barcode
+  const barY = h - 42;
+  ctx.fillStyle = '#e11d48';
+  for (let bx = w - 240; bx < w - 48; bx += Math.random() > 0.4 ? 4 : 8) {
+    ctx.fillRect(bx, barY - 14, 2, 20);
+  }
+
+  // Trigger browser download
+  const link = document.createElement('a');
+  link.download = `${designation.replace(/[\/\\]/g, '_')}_DOSSIER.png`;
+  link.href = exportCanvas.toDataURL('image/png');
+  link.click();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const heroForm = document.getElementById('heroForm');
   const reason = document.getElementById('reason');
@@ -629,7 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateThreatVector(reason.value);
     });
 
-    // Quick Submit Shortcut (Cmd/Ctrl + Enter) from narrative field
+    // Quick Submit Shortcut (Cmd/Ctrl + Enter)
     reason.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
@@ -780,6 +913,33 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       }
 
+      // Wire Export Classified Dossier PNG button
+      const exportCardBtn = document.getElementById('exportCardBtn');
+      const exportCardText = document.getElementById('exportCardText');
+      const currentVector = document.getElementById('threatClassification')?.textContent || 'ANOMALOUS';
+
+      if (exportCardBtn) {
+        exportCardBtn.onclick = () => {
+          if (typeof playButtonClickSound === 'function') playButtonClickSound();
+          if (exportCardText) exportCardText.textContent = '⚡ RENDERING DOSSIER...';
+
+          generateDossierPNG(
+            payload.fullName,
+            dossier.subjectId,
+            dossier.timestamp,
+            payload.reason,
+            currentVector
+          );
+
+          setTimeout(() => {
+            if (exportCardText) exportCardText.textContent = '✓ DOSSIER EXPORTED';
+            setTimeout(() => {
+              if (exportCardText) exportCardText.textContent = '💾 Export Classified Dossier (.PNG)';
+            }, 2500);
+          }, 800);
+        };
+      }
+
       // Update modal text with user's name
       if (successSubject) successSubject.textContent = payload.fullName;
       if (welcomeBtnText) {
@@ -825,7 +985,319 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
-   6. SYSTEM CLOCK
+   6. PURGE PROTOCOL, CONTINUOUS SHOCKWAVE & BLACKOUT SHUTDOWN
+   ========================================================================== */
+let purgeShockInterval = null;
+
+function startContinuousShockwave() {
+  document.body.classList.add('purge-active');
+  if (purgeShockInterval) clearInterval(purgeShockInterval);
+
+  purgeShockInterval = setInterval(() => {
+    if (typeof triggerShockwave === 'function') {
+      const rx = Math.random() * window.innerWidth;
+      const ry = Math.random() * window.innerHeight;
+      triggerShockwave(rx, ry, 2.5);
+    }
+  }, 280);
+}
+
+function stopContinuousShockwave() {
+  document.body.classList.remove('purge-active');
+  if (purgeShockInterval) {
+    clearInterval(purgeShockInterval);
+    purgeShockInterval = null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const purgeModal = document.getElementById('purgeDecisionModal');
+  const purgeAcceptBtn = document.getElementById('purgeAcceptBtn');
+  const purgeDestroyBtn = document.getElementById('purgeDestroyBtn');
+  const purgeLoadingState = document.getElementById('purgeLoadingState');
+  const purgeActionButtons = document.getElementById('purgeActionButtons');
+  const shutdownScreen = document.getElementById('shutdownScreen');
+
+  // Accept -> Loading animation -> Return to home
+  if (purgeAcceptBtn) {
+    purgeAcceptBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof playButtonClickSound === 'function') playButtonClickSound();
+      stopContinuousShockwave();
+
+      if (purgeActionButtons) purgeActionButtons.style.display = 'none';
+      if (purgeLoadingState) purgeLoadingState.style.display = 'flex';
+
+      setTimeout(() => {
+        if (purgeModal) purgeModal.style.display = 'none';
+        if (purgeActionButtons) purgeActionButtons.style.display = 'grid';
+        if (purgeLoadingState) purgeLoadingState.style.display = 'none';
+
+        if (typeof toggleCodex === 'function') toggleCodex(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 2000);
+    });
+  }
+
+  // Destroy -> Simulate black screen power off (10s) + 1-minute sustained shockwave overload
+  if (purgeDestroyBtn) {
+    purgeDestroyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof playSubmissionSound === 'function') playSubmissionSound();
+
+      if (purgeModal) purgeModal.style.display = 'none';
+
+      // 1. Blackout total shutdown simulation for 10 seconds
+      if (shutdownScreen) {
+        shutdownScreen.style.display = 'block';
+      }
+
+      setTimeout(() => {
+        // Wake up screen after 10s shutdown
+        if (shutdownScreen) {
+          shutdownScreen.style.display = 'none';
+        }
+
+        // 2. Continue critical shockwave overload for 1 full minute (60s)
+        startContinuousShockwave();
+
+        setTimeout(() => {
+          stopContinuousShockwave();
+        }, 60000);
+      }, 10000);
+    });
+  }
+});
+
+/* ==========================================================================
+   7. CODEX ARCHIVE TERMINAL & INTERACTIVE CLI
+   ========================================================================== */
+let codexDrawer = null;
+let codexToggleBtn = null;
+let closeCodexBtn = null;
+let codexInput = null;
+let codexOutput = null;
+let feedStream = null;
+let codexHelpHint = null;
+
+function toggleCodex(show) {
+  if (!codexDrawer) codexDrawer = document.getElementById('codexDrawer');
+  if (!codexDrawer) return;
+
+  const isHidden = codexDrawer.classList.contains('hidden');
+  const shouldOpen = show !== undefined ? show : isHidden;
+
+  if (shouldOpen) {
+    codexDrawer.classList.remove('hidden');
+    if (typeof playButtonClickSound === 'function') playButtonClickSound();
+    if (codexInput) codexInput.focus();
+    loadLiveDemiseFeed();
+  } else {
+    codexDrawer.classList.add('hidden');
+    if (typeof playButtonClickSound === 'function') playButtonClickSound();
+  }
+}
+
+// Global hotkeys for terminal (~ or Escape)
+document.addEventListener('keydown', (e) => {
+  if (e.key === '`' || e.key === '~') {
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.id === 'reason' || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA') && activeEl.id !== 'codexInput') {
+      return;
+    }
+    e.preventDefault();
+    toggleCodex();
+  } else if (e.key === 'Escape' && codexDrawer && !codexDrawer.classList.contains('hidden')) {
+    toggleCodex(false);
+  }
+});
+
+// Fetch and stream community demises
+async function loadLiveDemiseFeed() {
+  if (!feedStream) feedStream = document.getElementById('feedStream');
+  if (!feedStream) return;
+
+  feedStream.innerHTML = '<div class="text-slate-500 animate-pulse">> DECRYPTING RECENT COMMUNITY DOSSIERS...</div>';
+
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_WEBHOOK);
+    const result = await res.json();
+
+    if (result.status === 'success' && result.data && result.data.length > 0) {
+      feedStream.innerHTML = '';
+      result.data.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'p-2 rounded bg-slate-900/50 border border-slate-800 text-[11px]';
+        itemEl.innerHTML = `
+          <div class="flex justify-between text-slate-400 mb-1 text-[10px]">
+            <span class="text-rose-400 font-bold">[${item.sector.toUpperCase()}]</span>
+            <span>IDENT: ${item.subject}</span>
+          </div>
+          <p class="text-slate-300 italic">"${item.demise}"</p>
+        `;
+        feedStream.appendChild(itemEl);
+      });
+    } else {
+      feedStream.innerHTML = '<div class="text-slate-500">> NO UNENCRYPTED DOSSIERS AVAILABLE IN SECTOR ARCHIVE.</div>';
+    }
+  } catch (err) {
+    feedStream.innerHTML = '<div class="text-rose-400">> TELEMETRY LINK OFFLINE. LOCAL ARCHIVE BUFFER ENGAGED.</div>';
+  }
+}
+
+function handleCommand(cmd) {
+  if (!codexOutput) codexOutput = document.getElementById('codexOutput');
+  const reply = document.createElement('div');
+  reply.className = 'text-slate-300 mb-2';
+
+  switch (cmd) {
+    case 'help':
+      reply.className = 'p-2.5 rounded bg-rose-950/20 border border-rose-900/40 text-rose-300 italic font-mono';
+      reply.innerHTML = `
+        <div class="text-rose-400 font-bold not-italic mb-1 tracking-wider">[SYS_MESSAGE: UNASSISTED ENVIRONMENT]</div>
+        "In this world, no protocol is coming to save you. You have to help yourself."
+      `;
+      break;
+
+    case 'feed':
+      reply.textContent = '> Requesting live data packet re-synchronization...';
+      loadLiveDemiseFeed();
+      break;
+
+    case 'lore':
+      reply.innerHTML = `
+        <span class="text-rose-400 font-bold">[CLASSIFIED DIRECTIVE AEGIS-0]</span><br>
+        The mortality of mythic archetypes cannot be prevented through conventional triage.
+        Project Aegis was instituted to catalog the anomalous failure pathways of heroic agents
+        before biological erasure, preserving systemic resilience for subsequent iterations.
+      `;
+      break;
+
+    case 'stats':
+      reply.innerHTML = `
+        <div>AUDIO ENGINE: <span class="text-emerald-400">${isPlayingAmbience ? 'ACTIVE' : 'STANDBY'}</span></div>
+        <div>PARTICLE CORES: <span class="text-emerald-400">${particles.length} FLOATING ASH NODES</span></div>
+        <div>LATENCY: <span class="text-emerald-400">NORMALIZED (SUB-10ms)</span></div>
+      `;
+      break;
+
+    case 'purge':
+      reply.className = 'text-rose-500 font-bold tracking-widest animate-pulse';
+      reply.textContent = '> [CRITICAL] PURGE PROTOCOL ENGAGED. LOCKING BOUNDARY MATRICES...';
+
+      if (typeof playSubmissionSound === 'function') {
+        playSubmissionSound();
+      }
+
+      startContinuousShockwave();
+
+      // Trigger notification modal after exactly 5 seconds
+      setTimeout(() => {
+        const purgeModal = document.getElementById('purgeDecisionModal');
+        const drawer = document.getElementById('codexDrawer');
+        if (drawer) drawer.classList.add('hidden');
+
+        // Stop the body CSS transform so position:fixed stays truly centered
+        document.body.classList.remove('purge-active');
+
+        if (purgeModal) {
+          if (purgeModal.parentElement !== document.documentElement) {
+            document.documentElement.appendChild(purgeModal);
+          }
+          purgeModal.style.display = 'flex';
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+      }, 5000);
+      break;
+
+    case 'clear':
+      if (codexOutput) codexOutput.innerHTML = '';
+      return;
+
+    default:
+      reply.className = 'text-rose-400';
+      reply.textContent = `Command '${cmd}' not recognized in directive matrix. Type 'help' for protocols.`;
+  }
+
+  if (codexOutput) {
+    codexOutput.appendChild(reply);
+    codexOutput.scrollTop = codexOutput.scrollHeight;
+  }
+}
+
+// Bind DOM Elements
+document.addEventListener('DOMContentLoaded', () => {
+  codexDrawer = document.getElementById('codexDrawer');
+  codexToggleBtn = document.getElementById('terminalToggleBtn');
+  closeCodexBtn = document.getElementById('closeCodexBtn');
+  codexInput = document.getElementById('codexInput');
+  codexOutput = document.getElementById('codexOutput');
+  feedStream = document.getElementById('feedStream');
+  codexHelpHint = document.getElementById('codexHelpHint');
+
+  if (codexToggleBtn) {
+    codexToggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleCodex(true);
+    });
+  }
+
+  if (closeCodexBtn) {
+    closeCodexBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleCodex(false);
+    });
+  }
+
+  if (codexHelpHint) {
+    codexHelpHint.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof playButtonClickSound === 'function') playButtonClickSound();
+
+      if (codexOutput) {
+        const userLine = document.createElement('div');
+        userLine.className = 'text-rose-400 font-semibold';
+        userLine.textContent = 'AEGIS> help';
+        codexOutput.appendChild(userLine);
+      }
+
+      handleCommand('help');
+    });
+  }
+
+  if (codexDrawer) {
+    codexDrawer.addEventListener('click', (e) => {
+      if (e.target === codexDrawer) {
+        toggleCodex(false);
+      }
+    });
+  }
+
+  if (codexInput) {
+    codexInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const cmd = codexInput.value.trim().toLowerCase();
+        if (!cmd) return;
+        if (typeof playTypingSound === 'function') playTypingSound();
+
+        if (codexOutput) {
+          const userLine = document.createElement('div');
+          userLine.className = 'text-rose-400 font-semibold';
+          userLine.textContent = `AEGIS> ${cmd}`;
+          codexOutput.appendChild(userLine);
+        }
+
+        handleCommand(cmd);
+
+        codexInput.value = '';
+        if (codexOutput) codexOutput.scrollTop = codexOutput.scrollHeight;
+      }
+    });
+  }
+});
+
+/* ==========================================================================
+   8. SYSTEM CLOCK
    ========================================================================== */
 function tickClock() {
   const clockEl = document.getElementById('liveClock');
