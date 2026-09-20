@@ -2,28 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>PROJECT AEGIS // Hero Mortality Intake Protocol</title>
 
   <!-- Primary Meta Tags -->
   <meta name="title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
   <meta name="description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
 
-  <!-- Open Graph / Facebook / Discord / LinkedIn -->
+  <!-- Open Graph / Social -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://aegis-demise.netlify.app/">
   <meta property="og:title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
   <meta property="og:description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
   <meta property="og:image" content="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80">
 
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://aegis-demise.netlify.app/">
-  <meta property="twitter:title" content="PROJECT AEGIS // Hero Mortality Intake Protocol">
-  <meta property="twitter:description" content="Classified telemetry and intake terminal for recording anomalous mortality pathways and hero termination mitigation.">
-  <meta property="twitter:image" content="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80">
-
-  <!-- Terminal Favicon SVG -->
+  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0f1d'/%3E%3Cpolygon points='50,15 85,78 15,78' fill='none' stroke='%23e11d48' stroke-width='8'/%3E%3Ccircle cx='50' cy='52' r='8' fill='%23e11d48'/%3E%3C/svg%3E">
 
   <!-- Tailwind CSS CDN -->
@@ -75,104 +68,109 @@
     }
   </script>
 
-  <!-- External Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="min-h-screen flex flex-col selection:bg-rose-950 selection:text-rose-200">
+<body class="min-h-screen flex flex-col selection:bg-rose-950 selection:text-rose-200 overflow-x-hidden">
   <div class="vignette"></div>
   <div class="scanlines"></div>
   <canvas id="particleCanvas"></canvas>
 
-  <header class="relative z-50 border-b border-borderDim/70 bg-void/80 backdrop-blur-md px-4 sm:px-8 py-3.5 sticky top-0">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
+  <!-- Responsive Header -->
+  <header class="relative z-50 border-b border-borderDim/70 bg-void/90 backdrop-blur-md px-3 sm:px-8 py-3 sticky top-0">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
       <!-- Left: Logo & Title -->
-      <div class="flex items-center space-x-3">
-        <div class="relative w-8 h-8 rounded bg-abyss border border-rose-900/60 flex items-center justify-center overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-t from-rose-950/50 to-transparent"></div>
-          <div class="w-2 h-2 rounded-full bg-crimson animate-ping"></div>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="font-cinzel tracking-wider text-slate-100 font-bold text-sm sm:text-base animate-glitch">PROJECT AEGIS</span>
-            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">RESEARCH-V4</span>
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-2.5">
+          <div class="relative w-7 h-7 sm:w-8 sm:h-8 rounded bg-abyss border border-rose-900/60 flex items-center justify-center overflow-hidden shrink-0">
+            <div class="absolute inset-0 bg-gradient-to-t from-rose-950/50 to-transparent"></div>
+            <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-crimson animate-ping"></div>
           </div>
-          <p class="text-[10px] font-mono text-slate-500 tracking-tight">HERO ARBITRARY TERMINATION MITIGATION PROTOCOL</p>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-cinzel tracking-wider text-slate-100 font-bold text-xs sm:text-base">PROJECT AEGIS</span>
+              <span class="text-[8px] sm:text-[9px] font-mono px-1 py-0.2 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">v4.2</span>
+            </div>
+            <p class="text-[9px] font-mono text-slate-500 tracking-tight sm:block hidden">HERO TERMINATION MITIGATION PROTOCOL</p>
+          </div>
+        </div>
+
+        <!-- Right Controls (Inlined for mobile header) -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Ambience Toggle -->
+          <button 
+            id="audioToggle" 
+            type="button"
+            class="px-2 sm:px-3 py-1.5 rounded border border-borderDim bg-panel/90 hover:bg-panel text-slate-300 text-[10px] sm:text-xs font-mono transition flex items-center gap-1.5 sm:gap-2 cursor-pointer select-none"
+          >
+            <span id="audioDot" class="w-1.5 h-1.5 rounded-full bg-slate-600 pointer-events-none"></span>
+            <canvas id="audioVisualizer" width="36" height="10" class="opacity-70 pointer-events-none"></canvas>
+            <span id="audioText" class="pointer-events-none text-[10px] sm:text-xs">AMBIENCE</span>
+          </button>
+
+          <!-- SFX Toggle -->
+          <button 
+            id="sfxToggle" 
+            type="button"
+            class="px-2 sm:px-3 py-1.5 rounded border border-borderDim bg-panel/90 hover:bg-panel text-slate-300 text-[10px] sm:text-xs font-mono transition flex items-center gap-1.5 cursor-pointer select-none"
+          >
+            <span id="sfxDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 pointer-events-none"></span>
+            <span id="sfxText" class="pointer-events-none text-[10px] sm:text-xs">SFX</span>
+          </button>
         </div>
       </div>
 
-      <!-- Right: Single Unified Ambience & SFX Controls -->
-      <div class="flex items-center gap-2 sm:gap-3 relative z-50">
-        <!-- Unified Ambience Toggle with Equalizer Waveform -->
-        <button 
-          id="audioToggle" 
-          type="button"
-          class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2.5 cursor-pointer select-none"
-        >
-          <span id="audioDot" class="w-2 h-2 rounded-full bg-slate-600 pointer-events-none"></span>
-          <canvas id="audioVisualizer" width="42" height="12" class="opacity-70 pointer-events-none"></canvas>
-          <span id="audioText" class="pointer-events-none">AMBIENCE: OFF</span>
-        </button>
-
-        <!-- SFX Button -->
-        <button 
-          id="sfxToggle" 
-          type="button"
-          class="px-3 py-1.5 rounded border border-borderDim bg-panel/80 hover:bg-panel text-slate-300 text-xs font-mono transition flex items-center gap-2 cursor-pointer select-none"
-        >
-          <span id="sfxDot" class="w-2 h-2 rounded-full bg-emerald-500 pointer-events-none"></span>
-          <span id="sfxText" class="pointer-events-none">SFX: ON</span>
-        </button>
-      </div>
     </div>
   </header>
 
-  <main class="relative z-10 flex-grow max-w-4xl mx-auto px-4 py-10 sm:py-14 w-full">
+  <main class="relative z-10 flex-grow max-w-4xl mx-auto px-3.5 sm:px-6 py-6 sm:py-12 w-full">
     
-    <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-950/40 border border-rose-900/50 text-rose-400 font-mono text-[11px] mb-4">
+    <!-- Hero Headline & Description -->
+    <div class="text-center max-w-2xl mx-auto mb-6 sm:mb-10">
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-950/40 border border-rose-900/50 text-rose-400 font-mono text-[10px] sm:text-[11px] mb-3">
         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-        <span>AUTONOMOUS GAME ENGINE HEURISTICS INTAKE</span>
+        <span>GAME ENGINE HEURISTICS INTAKE</span>
       </div>
 
-      <h1 class="font-cinzel text-3xl sm:text-4xl md:text-5xl font-black text-slate-100 tracking-tight leading-snug sm:leading-tight mb-4 animate-glitch">
+      <h1 class="font-cinzel text-2xl sm:text-4xl md:text-5xl font-black text-slate-100 tracking-tight leading-snug sm:leading-tight mb-3 animate-glitch">
         HOW DOES PHYSICAL STATE LEAVE AURA?
       </h1>
 
-      <p class="text-slate-300 text-sm sm:text-base leading-relaxed font-light mb-3">
+      <p class="text-slate-300 text-xs sm:text-base leading-relaxed font-light mb-2">
         We are constructing an autonomous game system programmed to understand <strong class="text-rose-400 font-medium">how NOT to demise YOURSELF</strong>.
       </p>
 
-      <p class="text-xs sm:text-sm text-slate-400 font-mono leading-relaxed max-w-xl mx-auto">
-        Most games terminate players through arbitrary trivia—a miscalculated hop, an unseen obstacle, or an expired timer. We need your psychological baseline: 
-        <em class="text-slate-200">If mortality was deliberate and under your control, what would make a demise acceptable, poetic, or justified?</em>
+      <p class="text-[11px] sm:text-sm text-slate-400 font-mono leading-relaxed max-w-xl mx-auto">
+        If mortality was deliberate and under your control, what would make a demise acceptable, poetic, or justified?
       </p>
     </div>
 
-    <div class="bg-panel/90 border border-borderDim rounded-xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+    <!-- Terminal Dispatch Form -->
+    <div class="bg-panel/95 border border-borderDim rounded-xl p-4 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
       <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rose-600/70 to-transparent"></div>
 
-      <div class="flex items-center justify-between border-b border-borderDim/80 pb-4 mb-6 text-xs font-mono">
+      <div class="flex items-center justify-between border-b border-borderDim/80 pb-3 mb-5 text-xs font-mono">
         <div>
-          <span class="text-rose-400 font-bold uppercase tracking-wider block">DISPATCH CONSOLE</span>
-          <span class="text-[11px] text-slate-500">Transmitted directly to secure researcher spreadsheets.</span>
+          <span class="text-rose-400 font-bold uppercase tracking-wider block text-[11px] sm:text-xs">DISPATCH CONSOLE</span>
+          <span class="text-[10px] text-slate-500 hidden sm:inline">Transmitted directly to secure researcher spreadsheets.</span>
         </div>
-        <div class="flex items-center gap-1.5 text-[10px] text-slate-400 bg-void px-2.5 py-1 rounded border border-borderDim">
+        <div class="flex items-center gap-1 text-[9px] sm:text-[10px] text-slate-400 bg-void px-2 py-0.5 rounded border border-borderDim">
           <svg class="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          <span>ENCRYPTED INGESTION</span>
+          <span>ENCRYPTED</span>
         </div>
       </div>
 
-      <form id="heroForm" class="space-y-6" novalidate>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <form id="heroForm" class="space-y-4 sm:space-y-6" novalidate>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
 
-          <!-- 1. Full Name (Compulsory) -->
-          <div class="space-y-1.5">
+          <!-- 1. Full Name -->
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label for="fullName" class="text-xs font-mono text-slate-300 uppercase">
-                01. Full Name / Subject Code <span class="text-rose-500">*</span>
+              <label for="fullName" class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
+                01. Full Name / Designation <span class="text-rose-500">*</span>
               </label>
-              <span class="text-[10px] font-mono text-rose-400 font-semibold">COMPULSORY</span>
+              <span class="text-[9px] font-mono text-rose-400 font-semibold">REQUIRED</span>
             </div>
             <input 
               type="text" 
@@ -180,60 +178,60 @@
               name="fullName" 
               required 
               placeholder="e.g. Commander Arthur Vance" 
-              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+              class="hud-input w-full px-3 py-2 rounded-lg text-xs sm:text-sm text-slate-200 placeholder-slate-600"
             />
-            <p id="nameError" class="text-[11px] font-mono text-rose-400 hidden">Identity designation is required.</p>
+            <p id="nameError" class="text-[10px] font-mono text-rose-400 hidden">Identity designation is required.</p>
           </div>
 
-          <!-- 2. Email (Optional) -->
-          <div class="space-y-1.5">
+          <!-- 2. Email -->
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label for="email" class="text-xs font-mono text-slate-300 uppercase">
+              <label for="email" class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
                 02. Electronic Mail
               </label>
-              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+              <span class="text-[9px] font-mono text-slate-500">OPTIONAL</span>
             </div>
             <input 
               type="email" 
               id="email" 
               name="email" 
               placeholder="vance@aegis-research.org" 
-              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+              class="hud-input w-full px-3 py-2 rounded-lg text-xs sm:text-sm text-slate-200 placeholder-slate-600"
             />
-            <p id="emailError" class="text-[11px] font-mono text-rose-400 hidden">Please supply a valid electronic mail syntax.</p>
+            <p id="emailError" class="text-[10px] font-mono text-rose-400 hidden">Valid email syntax required.</p>
           </div>
 
-          <!-- 3. Phone (Optional) -->
-          <div class="space-y-1.5">
+          <!-- 3. Contact -->
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label for="phone" class="text-xs font-mono text-slate-300 uppercase">
+              <label for="phone" class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
                 03. Contact / Secure Line
               </label>
-              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+              <span class="text-[9px] font-mono text-slate-500">OPTIONAL</span>
             </div>
             <input 
               type="tel" 
               id="phone" 
               name="phone" 
               placeholder="+1 (555) 019-2831" 
-              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+              class="hud-input w-full px-3 py-2 rounded-lg text-xs sm:text-sm text-slate-200 placeholder-slate-600"
             />
           </div>
 
-          <!-- 4. Date of Genesis (Day, Month, Year Dropdowns) -->
-          <div class="space-y-1.5">
+          <!-- 4. Date of Genesis -->
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label class="text-xs font-mono text-slate-300 uppercase">
+              <label class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
                 04. Date of Genesis (DOB)
               </label>
-              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+              <span class="text-[9px] font-mono text-slate-500">OPTIONAL</span>
             </div>
-            <div class="grid grid-cols-3 gap-2">
-              <select id="dobDay" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+            <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+              <select id="dobDay" class="hud-input w-full px-2 py-2 rounded-lg text-xs text-slate-200 cursor-pointer">
                 <option value="" class="bg-panel text-slate-400">Day</option>
               </select>
 
-              <select id="dobMonth" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+              <select id="dobMonth" class="hud-input w-full px-2 py-2 rounded-lg text-xs text-slate-200 cursor-pointer">
                 <option value="" class="bg-panel text-slate-400">Month</option>
                 <option value="01" class="bg-panel">Jan</option>
                 <option value="02" class="bg-panel">Feb</option>
@@ -249,84 +247,86 @@
                 <option value="12" class="bg-panel">Dec</option>
               </select>
 
-              <select id="dobYear" class="hud-input w-full px-2 py-2.5 rounded-lg text-xs text-slate-200 cursor-pointer">
+              <select id="dobYear" class="hud-input w-full px-2 py-2 rounded-lg text-xs text-slate-200 cursor-pointer">
                 <option value="" class="bg-panel text-slate-400">Year</option>
               </select>
             </div>
           </div>
 
-          <!-- 5. City (Optional) -->
-          <div class="space-y-1.5">
+          <!-- 5. City -->
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label for="city" class="text-xs font-mono text-slate-300 uppercase">
-                05. Terrestrial City / Sector
+              <label for="city" class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
+                05. Terrestrial Sector
               </label>
-              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+              <span class="text-[9px] font-mono text-slate-500">OPTIONAL</span>
             </div>
             <input 
               type="text" 
               id="city" 
               name="city" 
-              placeholder="e.g. Kyoto, Seattle, London, Sector 4" 
-              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 placeholder-slate-600"
+              placeholder="e.g. Kyoto, Seattle, Sector 4" 
+              class="hud-input w-full px-3 py-2 rounded-lg text-xs sm:text-sm text-slate-200 placeholder-slate-600"
             />
           </div>
 
           <!-- 6. Employment Status -->
-          <div class="space-y-1.5">
+          <div class="space-y-1">
             <div class="flex justify-between items-center">
-              <label for="employment" class="text-xs font-mono text-slate-300 uppercase">
-                06. Current Societal Function
+              <label for="employment" class="text-[11px] sm:text-xs font-mono text-slate-300 uppercase">
+                06. Societal Function
               </label>
-              <span class="text-[10px] font-mono text-slate-500">OPTIONAL</span>
+              <span class="text-[9px] font-mono text-slate-500">OPTIONAL</span>
             </div>
             <select 
               id="employment" 
               name="employment" 
-              class="hud-input w-full px-3.5 py-2.5 rounded-lg text-sm text-slate-200 cursor-pointer"
+              class="hud-input w-full px-3 py-2 rounded-lg text-xs sm:text-sm text-slate-200 cursor-pointer"
             >
-              <option value="" disabled selected class="bg-panel text-slate-500">Select your status</option>
+              <option value="" disabled selected class="bg-panel text-slate-500">Select status</option>
               <option value="Employed" class="bg-panel">Employed / Active Workforce</option>
-              <option value="Unemployed" class="bg-panel">Unemployed / In Transition</option>
+              <option value="Unemployed" class="bg-panel">Unemployed / Transitioning</option>
               <option value="Student" class="bg-panel">Student / Scholar</option>
-              <option value="Freelancer / Contractor" class="bg-panel">Freelance / Specialist</option>
-              <option value="Other / Classified" class="bg-panel">Other / Unspecified</option>
+              <option value="Freelancer / Contractor" class="bg-panel">Specialist / Contractor</option>
+              <option value="Other / Classified" class="bg-panel">Classified / Other</option>
             </select>
           </div>
 
-          <!-- Live Threat Vector Diagnostic Badge -->
-          <div class="flex items-center justify-between mb-2 md:col-span-2">
-            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-black/60 border border-slate-800 text-[11px] font-mono tracking-wider">
-              <span id="threatDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 transition-colors duration-300"></span>
-              <span class="text-slate-400">VECTOR:</span>
-              <span id="threatClassification" class="text-emerald-400 font-semibold transition-colors duration-300">ANALYZING BIOMETRICS...</span>
+          <!-- Threat Vector Live HUD -->
+          <div class="sm:col-span-2 pt-1">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-black/60 border border-slate-800 text-[10px] sm:text-[11px] font-mono tracking-wider w-full justify-between sm:justify-start">
+              <div class="flex items-center gap-2">
+                <span id="threatDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 transition-colors duration-300"></span>
+                <span class="text-slate-400">VECTOR:</span>
+                <span id="threatClassification" class="text-emerald-400 font-semibold transition-colors duration-300">ANALYZING BIOMETRICS...</span>
+              </div>
             </div>
-          </div>  
+          </div>
 
         </div>
 
-        <div class="pt-4 border-t border-borderDim/70">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-            <label for="reason" class="text-xs font-mono text-rose-300 uppercase font-semibold flex items-center gap-1.5">
-              <span>07. The Justified Demise (Appropriate Reason of Death)</span>
-              <span class="text-rose-500 font-bold">*</span>
+        <!-- 7. Reason For Demise -->
+        <div class="pt-3 border-t border-borderDim/70">
+          <div class="flex justify-between items-center mb-1">
+            <label for="reason" class="text-[11px] sm:text-xs font-mono text-rose-300 uppercase font-semibold">
+              07. The Justified Demise <span class="text-rose-500 font-bold">*</span>
             </label>
-            <span class="text-[10px] font-mono text-rose-400">COMPULSORY</span>
+            <span class="text-[9px] font-mono text-rose-400">REQUIRED</span>
           </div>
 
-          <p class="text-xs text-slate-400 mb-3 font-sans">
-            Under what specific circumstances is the hero permitted to cease living? Detail the moment, the sacrifice, or the condition.
+          <p class="text-[11px] text-slate-400 mb-2.5 font-sans leading-relaxed">
+            Under what conditions is the hero permitted to cease living? Detail the sacrifice or situation.
           </p>
 
-          <div class="flex flex-wrap gap-2 mb-3">
-            <span class="text-[10px] font-mono text-slate-500 self-center">Archetypes:</span>
-            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Holding the collapsing perimeter gate alone so non-combatants can board the final extraction vessel.">
-              + Rearguard Sacrifice
+          <!-- Archetypes Touch Chips -->
+          <div class="flex flex-wrap gap-1.5 mb-2.5">
+            <button type="button" class="preset-btn text-[10px] font-mono px-2 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Holding the collapsing perimeter gate alone so non-combatants can board the final extraction vessel.">
+              + Rearguard
             </button>
-            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Surviving every battle and dying peacefully of old age watching the civilization they defended prosper.">
-              + Quiet Senescence
+            <button type="button" class="preset-btn text-[10px] font-mono px-2 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Surviving every battle and dying peacefully of old age watching the civilization they defended prosper.">
+              + Senescence
             </button>
-            <button type="button" class="preset-btn text-[11px] font-mono px-2.5 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Choosing voluntary oblivion to permanently deactivate a world-eating machine.">
+            <button type="button" class="preset-btn text-[10px] font-mono px-2 py-1 rounded bg-abyss hover:bg-borderDim text-slate-300 border border-borderDim transition" data-text="Choosing voluntary oblivion to permanently deactivate a world-eating machine.">
               + Cosmic Trade-off
             </button>
           </div>
@@ -334,117 +334,114 @@
           <textarea 
             id="reason" 
             name="reason" 
-            rows="4" 
+            rows="3" 
             required 
-            placeholder="Record the exact sequence of events that justifies hero demise... (Press Cmd/Ctrl + Enter to quick submit)"
-            class="hud-input w-full px-3.5 py-3 rounded-lg text-sm text-slate-200 placeholder-slate-600 leading-relaxed font-sans"
+            placeholder="Record the exact sequence of events that justifies hero demise..."
+            class="hud-input w-full px-3 py-2.5 rounded-lg text-xs sm:text-sm text-slate-200 placeholder-slate-600 leading-relaxed font-sans"
           ></textarea>
           
-          <div class="flex justify-between items-center mt-1.5 text-[11px] font-mono">
-            <p id="reasonError" class="text-rose-400 hidden">You must state the appropriate demise parameters.</p>
-            <div id="charCounter" class="text-slate-500 ml-auto">0 characters logged</div>
+          <div class="flex justify-between items-center mt-1 text-[10px] font-mono">
+            <p id="reasonError" class="text-rose-400 hidden">You must state the demise parameters.</p>
+            <div id="charCounter" class="text-slate-500 ml-auto">0 logged</div>
           </div>
         </div>
 
-        <!-- Feature Consent Checkbox -->
-        <div class="p-4 rounded-lg bg-abyss/80 border border-borderDim hover:border-rose-900/60 transition space-y-2">
-          <label class="flex items-start gap-3 cursor-pointer select-none">
+        <!-- Feature Consent -->
+        <div class="p-3 rounded-lg bg-abyss/80 border border-borderDim text-left">
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
             <input 
               type="checkbox" 
               id="featureConsent" 
               name="featureConsent" 
               checked
-              class="mt-1 w-4 h-4 rounded border-borderDim bg-panel text-rose-600 focus:ring-rose-500 focus:ring-offset-void cursor-pointer accent-rose-600"
+              class="mt-0.5 w-3.5 h-3.5 rounded border-borderDim bg-panel text-rose-600 accent-rose-600"
             />
-            <div class="text-xs space-y-0.5">
+            <div class="text-[11px] space-y-0.5">
               <span class="font-mono text-slate-200 font-medium block">
-                Feature my demise directive in the public research memorial / game credits
+                Feature in public research memorial / credits
               </span>
-              <p class="text-[11px] text-slate-400 font-sans leading-relaxed">
-                If checked, your submission may be commemorated anonymously or by your Subject Name in future game iterations. If unchecked, your transmission remains strictly confidential for research eyes only.
+              <p class="text-[10px] text-slate-400 font-sans leading-tight">
+                If checked, your submission may be commemorated anonymously in future game iterations.
               </p>
             </div>
           </label>
         </div>
 
-        <div class="pt-3">
+        <!-- Submit Button -->
+        <div class="pt-2">
           <button 
             type="submit" 
             id="submitBtn"
-            class="w-full py-3.5 px-6 rounded-lg bg-gradient-to-r from-rose-700 via-rose-600 to-red-600 hover:from-rose-600 hover:to-red-500 text-white font-mono text-xs uppercase font-bold tracking-widest transition-all duration-200 shadow-xl shadow-rose-950/60 border border-rose-500/40 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+            class="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-rose-700 via-rose-600 to-red-600 hover:from-rose-600 text-white font-mono text-[11px] sm:text-xs uppercase font-bold tracking-wider transition-all duration-200 shadow-lg shadow-rose-950/60 border border-rose-500/40 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
           >
-            <span id="btnSpinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span id="btnSpinner" class="hidden w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span id="btnText">TRANSMIT TO EXPERIMENTAL CORE</span>
           </button>
         </div>
       </form>
     </div>
 
-    <div class="mt-6 text-center text-xs font-mono text-slate-500 max-w-lg mx-auto">
-      <div class="flex items-center justify-center gap-2 mb-1">
-        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        <span>RESTRICTED ACCESS TOPOLOGY</span>
-      </div>
-      <span>All submissions are ingested into an encrypted private spreadsheet. No public viewing portal or visitor record query exists on this network.</span>
+    <!-- Bottom Footer Disclaimer -->
+    <div class="mt-5 text-center text-[10px] sm:text-xs font-mono text-slate-500 max-w-lg mx-auto">
+      <span>All submissions are ingested into an encrypted private spreadsheet. No public viewing portal exists on this network.</span>
     </div>
   </main>
 
+  <!-- Mobile-Optimized Floating Terminal Trigger (Left-Anchored) -->
+  <button id="terminalToggleBtn" type="button" class="fixed bottom-4 left-4 z-40 px-2.5 py-1.5 rounded-lg bg-black/90 border border-rose-500/50 text-rose-400 font-mono text-[11px] tracking-wider flex items-center gap-1.5 hover:bg-rose-950/40 shadow-xl transition active:scale-95">
+    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+    <span>[~] CODEX</span>
+  </button>
+
   <!-- Success Confirmation Modal -->
-  <div id="successModal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="max-w-md w-full bg-panel border border-rose-600/80 rounded-xl p-6 sm:p-8 relative shadow-2xl text-center">
-      <div class="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-500/60 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-950/60">
-        <svg class="w-6 h-6 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div id="successModal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="max-w-md w-full bg-panel border border-rose-600/80 rounded-xl p-5 sm:p-8 relative shadow-2xl text-center max-h-[90vh] overflow-y-auto">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-950/80 border border-rose-500/60 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-rose-950/60">
+        <svg class="w-5 h-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
       </div>
 
-      <h3 class="font-cinzel text-xl text-slate-100 font-bold mb-2">TELEMETRY SECURED</h3>
-      <p class="text-xs text-slate-300 mb-4 leading-relaxed font-sans">
-        Mortality condition recorded for <strong id="successSubject" class="text-rose-400"></strong>. The neural heuristic engine has recalibrated against unwarranted hero execution.
+      <h3 class="font-cinzel text-lg sm:text-xl text-slate-100 font-bold mb-1.5">TELEMETRY SECURED</h3>
+      <p class="text-[11px] sm:text-xs text-slate-300 mb-3.5 leading-relaxed font-sans">
+        Mortality condition recorded for <strong id="successSubject" class="text-rose-400"></strong>. The heuristic engine has recalibrated against unwarranted hero execution.
       </p>
-
-      <div class="p-3 bg-void rounded border border-borderDim text-[11px] font-mono text-slate-400 text-left mb-5 space-y-1">
-        <div>Destination: <span class="text-slate-200">Demise SV</span></div>
-        <div>Payload Status: <span class="text-emerald-400 font-semibold">200 INGESTION COMMITTED</span></div>
-      </div>
       
-      <!-- Cryptographic Dossier Token Display -->
-      <div class="dossier-card p-3.5 rounded mb-5 text-left font-mono">
-        <div class="flex items-center justify-between text-[10px] text-slate-400 mb-2 border-b border-slate-800 pb-1.5">
+      <!-- Dossier Token Card -->
+      <div class="dossier-card p-3 rounded mb-4 text-left font-mono">
+        <div class="flex items-center justify-between text-[9px] text-slate-400 mb-1.5 border-b border-slate-800 pb-1">
           <span class="tracking-widest">RECORD // ARCHIVAL TELEMETRY</span>
           <span class="text-rose-400 animate-pulse">ENCRYPTED</span>
         </div>
-        <div class="text-xs space-y-1 text-slate-300">
-          <div><span class="text-slate-500">SUBJECT DESIGNATION:</span> <span id="tokenSubjectId" class="text-rose-400 font-bold">---</span></div>
-          <div><span class="text-slate-500">INGEST TIMESTAMP:</span> <span id="tokenTimestamp" class="text-slate-200">---</span></div>
-          <div><span class="text-slate-500">CLEARANCE STATUS:</span> <span class="text-emerald-400 font-semibold">TERMINAL LOG COMMITTED</span></div>
+        <div class="text-[10px] sm:text-xs space-y-1 text-slate-300">
+          <div><span class="text-slate-500">SUBJECT:</span> <span id="tokenSubjectId" class="text-rose-400 font-bold">---</span></div>
+          <div><span class="text-slate-500">TIMESTAMP:</span> <span id="tokenTimestamp" class="text-slate-200">---</span></div>
+          <div><span class="text-slate-500">STATUS:</span> <span class="text-emerald-400 font-semibold">COMMITTED</span></div>
         </div>
         
-        <!-- Copy Token Button -->
-        <button type="button" id="copyTokenBtn" class="mt-3 w-full py-1.5 px-3 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] rounded tracking-wider uppercase transition flex items-center justify-center gap-2">
-          <span id="copyTokenText">📋 Copy Dossier Token</span>
-        </button>
-
-        <!-- Export PNG Card Button -->
-        <button type="button" id="exportCardBtn" class="mt-2 w-full py-1.5 px-3 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-[11px] rounded tracking-wider uppercase transition flex items-center justify-center gap-2">
-          <span id="exportCardText">💾 Export Classified Dossier (.PNG)</span>
-        </button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+          <button type="button" id="copyTokenBtn" class="w-full py-1.5 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+            <span id="copyTokenText">📋 Copy Token</span>
+          </button>
+          <button type="button" id="exportCardBtn" class="w-full py-1.5 px-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1.5">
+            <span id="exportCardText">💾 Export (.PNG)</span>
+          </button>
+        </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="space-y-2.5">
+      <div class="space-y-2">
         <button 
           id="welcomeUserBtn" 
           type="button" 
-          class="w-full py-3 px-4 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-mono text-xs uppercase font-bold tracking-wider transition cursor-pointer active:scale-[0.98]"
+          class="w-full py-2.5 px-4 rounded-lg bg-rose-700 hover:bg-rose-600 text-white font-mono text-[11px] uppercase font-bold tracking-wider transition active:scale-[0.98]"
         >
           <span id="welcomeBtnText">Welcome to the World</span>
         </button>
-
         <button 
           id="submitAnotherBtn" 
           type="button" 
-          class="w-full py-2.5 px-4 rounded-lg bg-void hover:bg-panel border border-borderDim text-slate-300 font-mono text-xs uppercase font-medium tracking-wider transition cursor-pointer"
+          class="w-full py-2 px-4 rounded-lg bg-void hover:bg-panel border border-borderDim text-slate-300 font-mono text-[10px] uppercase tracking-wider transition"
         >
           Submit Another Demise
         </button>
@@ -452,76 +449,55 @@
     </div>
   </div>
 
-  <footer class="relative z-20 border-t border-borderDim/70 bg-void/90 px-4 py-5 text-center text-xs font-mono text-slate-500 mt-12">
-    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span>
-        <span>AEGIS MOTOR-COGNITION EXPERIMENT</span>
-      </div>
-      
-      <div class="flex items-center gap-4">
-        <div id="liveClock">SYSTEM TIME: --:--:-- UTC</div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Floating Terminal Trigger -->
-  <button id="terminalToggleBtn" type="button" class="fixed bottom-6 left-6 z-40 px-3 py-1.5 rounded bg-black/80 border border-rose-500/40 text-rose-400 font-mono text-xs tracking-wider flex items-center gap-2 hover:bg-rose-950/40 shadow-lg shadow-rose-950/50 transition">
-    <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-    <span>[~] CODEX CONSOLE</span>
-  </button>
-
-  <!-- Slide-Out Classified Archive Terminal -->
-  <div id="codexDrawer" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden font-mono">
-    <div class="w-full max-w-3xl bg-[#090d16] border border-rose-500/40 rounded-lg shadow-2xl overflow-hidden flex flex-col h-[520px]">
+  <!-- Mobile-Safe CODEX Terminal Drawer -->
+  <div id="codexDrawer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-2.5 sm:p-4 hidden font-mono">
+    <div class="w-full max-w-3xl bg-[#090d16] border border-rose-500/40 rounded-lg shadow-2xl overflow-hidden flex flex-col h-[82vh] sm:h-[520px]">
       
       <!-- Terminal Header Bar -->
-      <div class="px-4 py-2 bg-slate-900/80 border-b border-rose-950 flex items-center justify-between text-xs text-slate-400">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-          <span class="text-rose-400 font-bold">AEGIS_MAINFRAME // CODEX v4.2</span>
-          <span class="text-slate-600">|</span>
-          <span class="text-slate-500">SECTOR_FEED: ACTIVE</span>
+      <div class="px-3 sm:px-4 py-2 bg-slate-900/90 border-b border-rose-950 flex items-center justify-between text-[11px] sm:text-xs text-slate-400">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          <span class="text-rose-400 font-bold">AEGIS // CODEX v4.2</span>
         </div>
-        <div class="flex items-center gap-4">
-          <button type="button" id="codexHelpHint" class="text-rose-400 hover:text-rose-300 font-mono tracking-wider transition underline underline-offset-4 decoration-rose-500/40">HELP</button>
-          <button id="closeCodexBtn" class="text-slate-500 hover:text-rose-400 transition font-mono">ESC / [X]</button>
+        <div class="flex items-center gap-3">
+          <button type="button" id="codexHelpHint" class="text-rose-400 hover:text-rose-300 font-mono underline underline-offset-4 decoration-rose-500/40">HELP</button>
+          <button id="closeCodexBtn" class="text-slate-500 hover:text-rose-400 font-mono">[X]</button>
         </div>
       </div>
 
       <!-- Output Stream Area -->
-      <div id="codexOutput" class="flex-1 p-4 overflow-y-auto space-y-2.5 text-xs text-slate-300 leading-relaxed font-mono">
+      <div id="codexOutput" class="flex-1 p-3 sm:p-4 overflow-y-auto space-y-2 text-[11px] sm:text-xs text-slate-300 font-mono leading-relaxed">
         <div class="text-slate-500">> INITIALIZING CLASSIFIED MEMORIAL CORE...</div>
-        <div class="text-emerald-400">> TELEMETRY LINK ESTABLISHED. TYPE <span class="text-white font-bold">'help'</span> FOR COMMAND MATRIX.</div>
-        <div class="border-b border-slate-800 my-2"></div>
+        <div class="text-emerald-400">> TELEMETRY LINK ESTABLISHED. TYPE <span class="text-white font-bold">'help'</span> FOR MATRIX.</div>
+        <div class="border-b border-slate-800 my-1.5"></div>
         <div id="feedStream" class="space-y-2">
-          <div class="text-slate-500 animate-pulse">> FETCHING ARCHIVED FIELD TRANSMISSIONS...</div>
+          <div class="text-slate-500 animate-pulse">> FETCHING TRANSMISSIONS...</div>
         </div>
       </div>
 
-      <!-- Interactive Prompt Input -->
-      <div class="p-3 bg-black/60 border-t border-slate-800 flex items-center gap-2">
-        <span class="text-rose-500 font-bold">AEGIS></span>
-        <input type="text" id="codexInput" placeholder="Enter command (try: 'feed', 'purge', 'lore', 'stats', 'clear')..." 
-              class="flex-1 bg-transparent border-none text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-600" autocomplete="off" />
+      <!-- Input Prompt -->
+      <div class="p-2.5 sm:p-3 bg-black/70 border-t border-slate-800 flex items-center gap-2">
+        <span class="text-rose-500 font-bold text-xs">AEGIS></span>
+        <input type="text" id="codexInput" placeholder="Type: 'feed', 'purge', 'lore', 'stats'..." 
+              class="flex-1 bg-transparent border-none text-[11px] sm:text-xs text-slate-100 font-mono focus:outline-none placeholder:text-slate-600" autocomplete="off" />
       </div>
     </div>
   </div>
 
-  <!-- Purge Protocol System Lockdown Overlay -->
+  <!-- Purge Protocol Overlay -->
   <div id="purgeDecisionModal" class="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl p-4 font-mono select-none" style="display: none;">
-    <div class="w-full max-w-md bg-[#0b0f19] border-2 border-rose-600/80 p-6 rounded-lg shadow-[0_0_60px_rgba(225,29,72,0.45)] text-center relative overflow-hidden m-auto">
+    <div class="w-full max-w-md bg-[#0b0f19] border-2 border-rose-600/80 p-5 sm:p-6 rounded-lg shadow-[0_0_60px_rgba(225,29,72,0.45)] text-center relative overflow-hidden m-auto">
       <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent animate-pulse"></div>
       
-      <div class="text-rose-500 text-xs font-bold tracking-widest uppercase mb-3 animate-pulse">
+      <div class="text-rose-500 text-[10px] sm:text-xs font-bold tracking-widest uppercase mb-2 animate-pulse">
         [SYSTEM ANOMALY // BOUNDARY FAILURE]
       </div>
       
-      <p class="text-slate-200 text-sm leading-relaxed mb-6 font-semibold italic">
+      <p class="text-slate-200 text-xs sm:text-sm leading-relaxed mb-5 font-semibold italic">
         "You are purged the boundries of digital verse, cause that cause you."
       </p>
 
-      <div id="purgeLoadingState" class="my-4 text-xs text-emerald-400 font-mono tracking-wider items-center justify-center gap-2" style="display: none;">
+      <div id="purgeLoadingState" class="my-3 text-xs text-emerald-400 font-mono tracking-wider items-center justify-center gap-2" style="display: none;">
         <svg class="animate-spin h-4 w-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -529,24 +505,33 @@
         <span>RE-ALIGNING TIMELINE VECTORS...</span>
       </div>
 
-      <div id="purgeActionButtons" class="grid grid-cols-2 gap-3">
-        <button type="button" id="purgeAcceptBtn" class="py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs tracking-wider uppercase rounded transition font-bold cursor-pointer">
+      <div id="purgeActionButtons" class="grid grid-cols-2 gap-2.5">
+        <button type="button" id="purgeAcceptBtn" class="py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs uppercase rounded font-bold cursor-pointer">
           Accept
         </button>
-        <button type="button" id="purgeDestroyBtn" class="py-2.5 px-4 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/50 text-rose-300 text-xs tracking-wider uppercase rounded transition font-bold cursor-pointer">
+        <button type="button" id="purgeDestroyBtn" class="py-2 px-3 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/50 text-rose-300 text-xs uppercase rounded font-bold cursor-pointer">
           Destroy
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Simulated Total Black Screen Shutdown -->
+  <!-- Blackout Screen Overlay -->
   <div id="shutdownScreen" class="fixed inset-0 bg-black z-[10000] cursor-none pointer-events-auto select-none" style="display: none;"></div>
 
-  <!-- Hidden Offscreen Canvas for Generating Dossier PNG Badges -->
+  <!-- Offscreen Canvas for Generating Dossier PNG Badges -->
   <canvas id="dossierExportCanvas" width="800" height="420" class="hidden"></canvas>
 
-  <!-- External JavaScript -->
+  <footer class="relative z-20 border-t border-borderDim/70 bg-void/90 px-4 py-4 text-center text-[10px] sm:text-xs font-mono text-slate-500 mt-8 sm:mt-12">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping"></span>
+        <span>AEGIS MOTOR-COGNITION EXPERIMENT</span>
+      </div>
+      <div id="liveClock">SYSTEM TIME: --:--:-- UTC</div>
+    </div>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>

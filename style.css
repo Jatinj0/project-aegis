@@ -141,3 +141,42 @@ select.hud-input option {
 .purge-active {
   animation: purgeEarthquake 0.1s infinite !important;
 }
+
+/* --- Mobile Responsive Optimizations --- */
+@media (max-width: 640px) {
+  /* Prevent horizontal screen bleed */
+  body, html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Improve typography scaling on phones */
+  h1 {
+    font-size: 1.65rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Ensure inputs are comfortable to tap without iOS auto-zoom */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Keep modals responsive to short mobile screens */
+  #codexDrawer > div {
+    height: 85vh !important;
+    max-height: 520px;
+  }
+
+  #successModal > div {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Floating trigger positioning safe for mobile thumbs */
+  #terminalToggleBtn {
+    bottom: 1rem !important;
+    left: 1rem !important;
+    padding: 0.4rem 0.65rem !important;
+    font-size: 10px !important;
+  }
+}
