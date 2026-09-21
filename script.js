@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.4
-   Phase 3 Complete: Audio Escalation, Heartbeat Engine & CRT Glitch
+   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.6
+   Phase 4 Complete: Telemetry Radar, Global Sector Grid, Audio Profiles & Badge Extractor
    ========================================================================== */
 
 (function () {
@@ -23,7 +23,7 @@
   let analyser = null;
   let audioDataArray = null;
 
-  // Soundscape oscillators & filters
+  // Soundscape components
   let oscRoot = null;
   let oscTritone = null;
   let oscShimmer = null;
@@ -32,10 +32,17 @@
   let filterNode = null;
   let tensionTimer = null;
 
-  // Phase 3: Heartbeat Engine & Dynamic Audio Tension
+  // Heartbeat & Acoustic Presets
   let heartbeatTimer = null;
   let currentCharacterTension = 0;
   let lastActiveVectorTag = '';
+
+  const AUDIO_PRESETS = {
+    subterranean: { root: 36.71, tritone: 51.91, shimmer: 584.2, filter: 280, label: 'SUBTERRANEAN CORE' },
+    void: { root: 27.50, tritone: 41.20, shimmer: 880.0, filter: 190, label: 'VOID SINGULARITY' },
+    fallout: { root: 43.65, tritone: 65.41, shimmer: 415.3, filter: 420, label: 'FALLOUT STATIC' }
+  };
+  let currentAudioPreset = 'subterranean';
 
   let shockwaveActive = false;
   let shockwaveRadius = 0;
@@ -44,9 +51,10 @@
   let purgeShockInterval = null;
   let cooldownTimerInterval = null;
 
+  // CLI Buffer State with full Phase 4 Commands
   const commandHistory = [];
   let historyIndex = -1;
-  const KNOWN_COMMANDS = ['help', 'feed', 'lore', 'stats', 'diagnostics', 'purge', 'clear'];
+  const KNOWN_COMMANDS = ['help', 'feed', 'lore', 'stats', 'audio', 'map', 'badge', 'diagnostics', 'purge', 'clear'];
 
   const threatClassifications = [
     {
@@ -105,8 +113,8 @@
   ];
 
   /* ==========================================================================
-     2. AUDIO ENGINE (Procedural Suspicion & Phase 3 Sub-Bass Heartbeat)
-     ========================================================================== */
+     2. PROCEDURAL AUDIO ENGINE & ACOUSTIC PRESETS
+     ========================================================================= */
   function ensureAudioReady() {
     try {
       if (!audioCtx) {
@@ -140,6 +148,8 @@
       if (!audioCtx) return;
       stopSuspiciousMusic();
 
+      const preset = AUDIO_PRESETS[currentAudioPreset] || AUDIO_PRESETS.subterranean;
+
       droneGain = audioCtx.createGain();
       droneGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
       droneGain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 2.0);
@@ -147,19 +157,19 @@
 
       filterNode = audioCtx.createBiquadFilter();
       filterNode.type = 'lowpass';
-      filterNode.frequency.setValueAtTime(280, audioCtx.currentTime);
+      filterNode.frequency.setValueAtTime(preset.filter, audioCtx.currentTime);
 
       oscRoot = audioCtx.createOscillator();
       oscRoot.type = 'sawtooth';
-      oscRoot.frequency.setValueAtTime(36.71, audioCtx.currentTime);
+      oscRoot.frequency.setValueAtTime(preset.root, audioCtx.currentTime);
 
       oscTritone = audioCtx.createOscillator();
       oscTritone.type = 'triangle';
-      oscTritone.frequency.setValueAtTime(51.91, audioCtx.currentTime);
+      oscTritone.frequency.setValueAtTime(preset.tritone, audioCtx.currentTime);
 
       oscShimmer = audioCtx.createOscillator();
       oscShimmer.type = 'sine';
-      oscShimmer.frequency.setValueAtTime(584.2, audioCtx.currentTime);
+      oscShimmer.frequency.setValueAtTime(preset.shimmer, audioCtx.currentTime);
       const shimmerGain = audioCtx.createGain();
       shimmerGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
       oscShimmer.connect(shimmerGain);
@@ -191,8 +201,23 @@
       isPlayingAmbience = true;
       updateAmbienceUI(true);
 
-      // Re-apply any active typing tension level
       applyAudioTension(currentCharacterTension);
+    } catch (e) {}
+  }
+
+  function applyAudioPreset(presetKey) {
+    const config = AUDIO_PRESETS[presetKey];
+    if (!config) return;
+    currentAudioPreset = presetKey;
+
+    if (!audioCtx || !isPlayingAmbience) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      if (oscRoot) oscRoot.frequency.exponentialRampToValueAtTime(config.root, now + 1.2);
+      if (oscTritone) oscTritone.frequency.exponentialRampToValueAtTime(config.tritone, now + 1.2);
+      if (oscShimmer) oscShimmer.frequency.exponentialRampToValueAtTime(config.shimmer, now + 1.2);
+      if (filterNode) filterNode.frequency.exponentialRampToValueAtTime(config.filter, now + 1.0);
     } catch (e) {}
   }
 
@@ -225,13 +250,12 @@
     } catch (e) {}
   }
 
-  // Phase 3: Procedural Dual-Thump Sub-Bass Heartbeat
   function playHeartbeatThump() {
     if (!audioCtx || !isPlayingAmbience) return;
     try {
       const now = audioCtx.currentTime;
 
-      // Lub (First Thump - 52Hz)
+      // Lub
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       osc1.type = 'sine';
@@ -244,7 +268,7 @@
       osc1.start(now);
       osc1.stop(now + 0.23);
 
-      // Dub (Second Thump - 42Hz, 240ms later)
+      // Dub
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
@@ -259,23 +283,21 @@
     } catch (e) {}
   }
 
-  // Phase 3: Dynamic Audio Escalation based on confession length
   function applyAudioTension(charCount) {
     currentCharacterTension = charCount;
     if (!audioCtx || !isPlayingAmbience || !filterNode) return;
 
     try {
       const now = audioCtx.currentTime;
-      // Interpolate filter cutoff from 280 Hz up to 680 Hz based on 0-400 characters
-      const targetFrequency = Math.min(680, 280 + (charCount / 400) * 400);
+      const baseFilter = AUDIO_PRESETS[currentAudioPreset]?.filter || 280;
+      const targetFrequency = Math.min(720, baseFilter + (charCount / 400) * 400);
+
       filterNode.frequency.cancelScheduledValues(now);
       filterNode.frequency.linearRampToValueAtTime(targetFrequency, now + 0.5);
 
-      // Heartbeat pulse frequency escalation
       if (charCount >= 180) {
         if (!heartbeatTimer) {
           playHeartbeatThump();
-          // Rate quickens as count approaches 400
           const intervalMs = Math.max(1200, 2200 - ((charCount - 180) / 220) * 1000);
           heartbeatTimer = setInterval(playHeartbeatThump, intervalMs);
         }
@@ -412,7 +434,7 @@
   }
 
   /* ==========================================================================
-     3. UI CONTROLS & HEADER VISUALIZER
+     3. UI CONTROLS & OSCILLOSCOPE
      ========================================================================== */
   function updateAmbienceUI(active) {
     const audioDot = document.getElementById('audioDot');
@@ -539,7 +561,6 @@
         this.color = Math.random() > 0.85 ? '225, 29, 72' : '100, 116, 139';
       }
       update(audioBoost) {
-        // Tension adds slight particle agitation
         const tensionAgitation = (currentCharacterTension / 400) * 0.6;
         this.y += (this.speedY + this.vy) - (audioBoost * 1.8) - tensionAgitation;
         this.x += (this.speedX + this.vx);
@@ -609,7 +630,7 @@
   }
 
   /* ==========================================================================
-     5. FORM LOGIC & PHASE 3 VECTOR GLITCH
+     5. FORM LOGIC, GLITCH TRIGGER & DOSSIER GENERATION
      ========================================================================== */
   function updateCount() {
     const reason = document.getElementById('reason');
@@ -617,7 +638,6 @@
     if (reason && charCounter) {
       const len = reason.value.length;
       charCounter.textContent = `${len} logged`;
-      // Escalate procedural tension
       applyAudioTension(len);
     }
   }
@@ -645,7 +665,6 @@
     const matched = threatClassifications.find(item => item.regex.test(text));
     const newTag = matched ? matched.tag : 'anomalous';
 
-    // Phase 3: Screen micro-glitch & telemetry click on vector shift
     if (newTag !== lastActiveVectorTag) {
       lastActiveVectorTag = newTag;
       triggerVectorGlitch();
@@ -822,7 +841,7 @@
   }
 
   /* ==========================================================================
-     6. PHASE 2: DEEP-LINK ENCODER & MATRIX DECRYPT
+     6. PHASE 2: DEEP-LINK ENCODER & MATRIX SCRAMBLER
      ========================================================================== */
   function generateShareableDossierURL(name, tokenId, vector, reason) {
     const base = window.location.origin + window.location.pathname;
@@ -910,7 +929,162 @@
   }
 
   /* ==========================================================================
-     7. PURGE CONTROLLER
+     7. PHASE 4: TELEMETRY RADAR, SECTOR GRID MAP & BADGE EXPORTER
+     ========================================================================== */
+  async function generateClusterTelemetry() {
+    let telemetryData = FALLBACK_ARCHIVE;
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_WEBHOOK);
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.status === 'success' && Array.isArray(result.data) && result.data.length > 0) {
+          telemetryData = result.data;
+        }
+      }
+    } catch (e) {}
+
+    const counts = {
+      martyrdom: 0,
+      entropy: 0,
+      void: 0,
+      incineration: 0,
+      voluntary: 0,
+      anomalous: 0
+    };
+
+    telemetryData.forEach(item => {
+      const text = item.demise || '';
+      const matched = threatClassifications.find(t => t.regex.test(text));
+      if (matched) {
+        counts[matched.tag]++;
+      } else {
+        counts.anomalous++;
+      }
+    });
+
+    const total = telemetryData.length || 1;
+    let outputHtml = `
+      <div class="text-rose-400 font-bold mb-2 tracking-wider">[REGIONAL TELEMETRY RADAR // SAMPLE N=${total}]</div>
+      <div class="space-y-1 text-[11px] font-mono">
+    `;
+
+    threatClassifications.forEach(tc => {
+      const count = counts[tc.tag] || 0;
+      const pct = Math.round((count / total) * 100);
+      const barLength = Math.round(pct / 5);
+      const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
+      outputHtml += `
+        <div class="flex items-center justify-between text-slate-300">
+          <span style="color: ${tc.color};" class="w-32 truncate">${tc.tag.toUpperCase()}</span>
+          <span class="text-slate-500">${bar}</span>
+          <span class="w-10 text-right font-bold text-slate-200">${pct}%</span>
+        </div>
+      `;
+    });
+
+    const anomCount = counts.anomalous || 0;
+    const anomPct = Math.round((anomCount / total) * 100);
+    const anomBarLength = Math.round(anomPct / 5);
+    const anomBar = '█'.repeat(anomBarLength) + '░'.repeat(20 - anomBarLength);
+
+    outputHtml += `
+        <div class="flex items-center justify-between text-slate-300 pt-1 border-t border-slate-800">
+          <span class="text-emerald-400 w-32 truncate">ANOMALOUS</span>
+          <span class="text-slate-500">${anomBar}</span>
+          <span class="w-10 text-right font-bold text-slate-200">${anomPct}%</span>
+        </div>
+      </div>
+    `;
+
+    return outputHtml;
+  }
+
+  async function renderSectorGridMap() {
+    let telemetryData = FALLBACK_ARCHIVE;
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_WEBHOOK);
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.status === 'success' && Array.isArray(result.data) && result.data.length > 0) {
+          telemetryData = result.data;
+        }
+      }
+    } catch (e) {}
+
+    const sectorCounts = {
+      ALPHA: 0,
+      SIGMA: 0,
+      DELTA: 0,
+      OMEGA: 0,
+      NEXUS: 0,
+      VOID: 0,
+      EPSILON: 0
+    };
+
+    telemetryData.forEach(item => {
+      const sec = (item.sector || '').toUpperCase();
+      Object.keys(sectorCounts).forEach(key => {
+        if (sec.includes(key)) sectorCounts[key]++;
+      });
+    });
+
+    return `
+      <div class="text-rose-400 font-bold mb-2 tracking-wider">[GLOBAL SECTOR RECON MATRIX // AEGIS-NET]</div>
+      <pre class="text-[10px] sm:text-[11px] leading-tight text-slate-400 font-mono select-none overflow-x-auto">
+  +-------------------------------------------------------------+
+  |  [ALPHA: ${String(sectorCounts.ALPHA).padStart(2, '0')}]           [SIGMA: ${String(sectorCounts.SIGMA).padStart(2, '0')}]           [DELTA:${String(sectorCounts.DELTA).padStart(2, '0')}]   |
+  |      \\                 /                 /         |
+  |       *==[NEXUS: ${String(sectorCounts.NEXUS).padStart(2, '0')}]=*               /          \vert{}   \vert{}      /                 \\             /             \vert{}   \vert{}  [EPSILON:${String(sectorCounts.EPSILON).padStart(2, '0')}]         [OMEGA: ${String(sectorCounts.OMEGA).padStart(2, '0')}]       [VOID:${String(sectorCounts.VOID).padStart(2, '0')}]       |
+  +-------------------------------------------------------------+
+      </pre>
+      <div class="text-[10px] text-emerald-400 mt-1">
+        STATUS: 7/7 SECTORS REPORTING TELEMETRY // ACTIVE NODES MONITORED
+      </div>
+    `;
+  }
+
+  async function downloadBadgeBySubjectId(searchId) {
+    if (!searchId) return '<span class="text-yellow-400">> Usage: badge <subject_id_or_keyword></span>';
+
+    let telemetryData = FALLBACK_ARCHIVE;
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_WEBHOOK);
+      if (res.ok) {
+        const result = await res.json();
+        if (result && result.status === 'success' && Array.isArray(result.data)) {
+          telemetryData = result.data;
+        }
+      }
+    } catch (e) {}
+
+    const cleanSearch = searchId.toLowerCase().trim();
+    const found = telemetryData.find(item =>
+      (item.subject && item.subject.toLowerCase().includes(cleanSearch)) ||
+      (item.sector && item.sector.toLowerCase().includes(cleanSearch)) ||
+      (item.demise && item.demise.toLowerCase().includes(cleanSearch))
+    );
+
+    if (!found) {
+      return `<span class="text-rose-400">> No telemetry entry matching ID or query: [${searchId.toUpperCase()}]</span>`;
+    }
+
+    const matchedVector = threatClassifications.find(t => t.regex.test(found.demise || ''));
+    const vectorLabel = matchedVector ? matchedVector.label : 'ANOMALOUS PATHWAY';
+    const now = new Date().toISOString().replace('T', ' // ').slice(0, 22) + ' UTC';
+
+    generateDossierPNG(
+      found.subject || 'CLASSIFIED AGENT',
+      `AEGIS-${found.subject || 'TARGET'}`,
+      now,
+      found.demise || 'Classified mortality sequence.',
+      vectorLabel
+    );
+
+    return `<span class="text-emerald-400">> Extracted & rendered classified dossier for: <strong class="text-white">${found.subject || 'SUBJECT'}</strong> (.PNG download initiated)</span>`;
+  }
+
+  /* ==========================================================================
+     8. PURGE CONTROLLER
      ========================================================================== */
   function startContinuousShockwave() {
     document.body.classList.add('purge-active');
@@ -932,7 +1106,7 @@
   }
 
   /* ==========================================================================
-     8. CODEX CLI & LIVE FEED ENGINE
+     9. CODEX CLI & COMMAND ROUTER
      ========================================================================== */
   function toggleCodex(show) {
     const codexDrawer = document.getElementById('codexDrawer');
@@ -1030,14 +1204,17 @@
       case 'help':
         reply.className = 'p-2.5 rounded bg-rose-950/20 border border-rose-900/40 text-rose-300 font-mono text-xs';
         reply.innerHTML = `
-          <div class="text-rose-400 font-bold mb-1.5 tracking-wider">[SYS_COMMAND_MATRIX // AEGIS]</div>
+          <div class="text-rose-400 font-bold mb-1.5 tracking-wider">[SYS_COMMAND_MATRIX // AEGIS v4.6]</div>
           <div class="space-y-1 text-[11px] text-slate-300">
-            <div><strong class="text-white">feed [filter]</strong> — Ingest telemetries (e.g. 'feed martyrdom', 'feed void', 'feed alpha').</div>
+            <div><strong class="text-white">feed [filter]</strong> — Stream telemetries ('feed martyrdom', 'feed void', 'feed alpha').</div>
+            <div><strong class="text-white">stats [-clusters]</strong> — Inspect engine states or compile regional cluster distribution.</div>
+            <div><strong class="text-white">map</strong> — Render global ASCII orbital sector recon grid.</div>
+            <div><strong class="text-white">badge [subject]</strong> — Render and download dossier badge (.PNG) by ID.</div>
+            <div><strong class="text-white">audio [preset]</strong> — Switch acoustic profiles: 'subterranean', 'void', 'fallout'.</div>
             <div><strong class="text-white">lore</strong> — Read classified Project Aegis genesis charter.</div>
-            <div><strong class="text-white">stats</strong> — Inspect real-time engine heuristic state.</div>
-            <div><strong class="text-white">diagnostics</strong> — Ingest system audio, rate limiter & buffer telemetry.</div>
+            <div><strong class="text-white">diagnostics</strong> — Query audio sample rate, analyser & buffer metrics.</div>
             <div><strong class="text-white">purge</strong> — Execute localized protocol boundary override.</div>
-            <div><strong class="text-white">clear</strong> — Flush console screen buffer.</div>
+            <div><strong class="text-white">clear</strong> — Flush terminal screen buffer.</div>
           </div>
         `;
         break;
@@ -1052,24 +1229,61 @@
         }
         break;
 
+      case 'audio':
+        if (['subterranean', 'void', 'fallout'].includes(arg)) {
+          applyAudioPreset(arg);
+          reply.className = 'text-emerald-400 font-mono text-xs';
+          reply.innerHTML = `> ACOUSTIC PROFILE SHIFTED TO: <strong class="text-white">[${AUDIO_PRESETS[arg].label}]</strong>`;
+        } else {
+          reply.className = 'text-yellow-400 font-mono text-xs';
+          reply.textContent = `Usage: audio <subterranean | void | fallout>. Current: [${AUDIO_PRESETS[currentAudioPreset].label}]`;
+        }
+        break;
+
+      case 'stats':
+        if (arg === 'clusters' || arg === '-clusters') {
+          reply.innerHTML = '<span class="text-slate-400 animate-pulse">> Compiling regional vector cluster telemetry...</span>';
+          generateClusterTelemetry().then(html => {
+            reply.innerHTML = html;
+            if (codexOutput) codexOutput.scrollTop = codexOutput.scrollHeight;
+          });
+        } else {
+          let cooldownActive = false;
+          try { cooldownActive = !!localStorage.getItem(STORAGE_KEY_COOLDOWN); } catch (e) {}
+          reply.innerHTML = `
+            <div>AUDIO PROFILE: <span class="text-emerald-400">${AUDIO_PRESETS[currentAudioPreset].label}</span></div>
+            <div>AUDIO ENGINE: <span class="text-emerald-400">${isPlayingAmbience ? 'ACTIVE' : 'STANDBY'}</span></div>
+            <div>SFX BUS: <span class="text-emerald-400">${sfxEnabled ? 'SYNTHESIZED' : 'MUTED'}</span></div>
+            <div>TENSION LEVEL: <span class="text-rose-400">${currentCharacterTension} / 400 CHARS</span></div>
+            <div>PARTICLE CORES: <span class="text-emerald-400">${particles.length} ACTIVE ASH PARTICLES</span></div>
+            <div>COOLDOWN STATUS: <span class="text-emerald-400">${cooldownActive ? 'ARMED' : 'CLEAR'}</span></div>
+            <div class="mt-1 text-[10px] text-slate-500">Run <span class="text-rose-400">'stats -clusters'</span> or <span class="text-rose-400">'map'</span> for spatial data.</div>
+          `;
+        }
+        break;
+
+      case 'map':
+        reply.innerHTML = '<span class="text-slate-400 animate-pulse">> Scanning orbital telemetry matrix...</span>';
+        renderSectorGridMap().then(html => {
+          reply.innerHTML = html;
+          if (codexOutput) codexOutput.scrollTop = codexOutput.scrollHeight;
+        });
+        break;
+
+      case 'badge':
+        reply.innerHTML = `<span class="text-slate-400 animate-pulse">> Scanning sector logs for [${(arg || 'UNKNOWN').toUpperCase()}]...</span>`;
+        downloadBadgeBySubjectId(arg).then(html => {
+          reply.innerHTML = html;
+          if (codexOutput) codexOutput.scrollTop = codexOutput.scrollHeight;
+        });
+        break;
+
       case 'lore':
         reply.innerHTML = `
           <span class="text-rose-400 font-bold">[CLASSIFIED DIRECTIVE AEGIS-0]</span><br>
           The mortality of mythic archetypes cannot be prevented through conventional triage.
           Project Aegis was instituted to catalog anomalous failure pathways of heroic agents
           before biological erasure, preserving systemic resilience for subsequent iterations.
-        `;
-        break;
-
-      case 'stats':
-        let cooldownActive = false;
-        try { cooldownActive = !!localStorage.getItem(STORAGE_KEY_COOLDOWN); } catch (e) {}
-        reply.innerHTML = `
-          <div>AUDIO ENGINE: <span class="text-emerald-400">${isPlayingAmbience ? 'ACTIVE' : 'STANDBY'}</span></div>
-          <div>SFX BUS: <span class="text-emerald-400">${sfxEnabled ? 'SYNTHESIZED' : 'MUTED'}</span></div>
-          <div>TENSION LEVEL: <span class="text-rose-400">${currentCharacterTension} / 400 CHARS</span></div>
-          <div>PARTICLE CORES: <span class="text-emerald-400">${particles.length} ACTIVE ASH PARTICLES</span></div>
-          <div>COOLDOWN STATUS: <span class="text-emerald-400">${cooldownActive ? 'ARMED' : 'CLEAR'}</span></div>
         `;
         break;
 
@@ -1088,6 +1302,7 @@
           <div class="text-[11px] text-slate-300 space-y-0.5">
             <div>AUDIO SAMPLE RATE: <span class="text-slate-100">${sampleRate}</span></div>
             <div>ANALYSER BINS: <span class="text-slate-100">${analyser ? analyser.frequencyBinCount : 'N/A'}</span></div>
+            <div>ACTIVE PROFILE: <span class="text-slate-100">${AUDIO_PRESETS[currentAudioPreset].label}</span></div>
             <div>HEARTBEAT BUS: <span class="text-slate-100">${heartbeatTimer ? 'ACTIVE PULSE' : 'STANDBY'}</span></div>
             <div>RATE LIMITER: <span class="text-slate-100">${remainingCooldown}</span></div>
             <div>COMMAND HISTORY: <span class="text-slate-100">${commandHistory.length} ENTRIES</span></div>
@@ -1133,10 +1348,10 @@
   }
 
   /* ==========================================================================
-     9. DOM INITIALIZATION
+     10. DOM INITIALIZATION
      ========================================================================== */
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Dropdowns
+    // 1. Populate Dropdowns
     const dobDaySelect = document.getElementById('dobDay');
     if (dobDaySelect) {
       dobDaySelect.innerHTML = '<option value="" class="bg-panel text-slate-400">Day</option>';
@@ -1406,8 +1621,6 @@
         if (welcomeBtnText) welcomeBtnText.textContent = `${payload.fullName}, Welcome to the World`;
 
         activateSubmissionCooldown(60);
-
-        // Reset audio tension back to baseline on submission
         applyAudioTension(0);
 
         if (successModal) successModal.classList.remove('hidden');
