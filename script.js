@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.6
-   Phase 4 Complete: Telemetry Radar, Global Sector Grid, Audio Profiles & Badge Extractor
+   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.7
+   Integrated: Audio Presets, Persistence, Panic Mute, Grid Map & Deep-Links
    ========================================================================== */
 
 (function () {
@@ -12,6 +12,7 @@
   const GOOGLE_SCRIPT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx44vRvB8utPOI03GMsfZFebb8PxefuHXRdTS78kuxpaQJfPhhVQ8FCuPg1PYWicjJP/exec";
   const STORAGE_KEY_AMBIENCE = 'aegis_ambience_pref';
   const STORAGE_KEY_SFX = 'aegis_sfx_pref';
+  const STORAGE_KEY_PRESET = 'aegis_audio_preset';
   const STORAGE_KEY_COOLDOWN = 'aegis_submission_cooldown';
 
   let audioCtx = null;
@@ -23,7 +24,7 @@
   let analyser = null;
   let audioDataArray = null;
 
-  // Soundscape components
+  // Soundscape oscillators and filters
   let oscRoot = null;
   let oscTritone = null;
   let oscShimmer = null;
@@ -51,7 +52,7 @@
   let purgeShockInterval = null;
   let cooldownTimerInterval = null;
 
-  // CLI Buffer State with full Phase 4 Commands
+  // CLI Buffer State
   const commandHistory = [];
   let historyIndex = -1;
   const KNOWN_COMMANDS = ['help', 'feed', 'lore', 'stats', 'audio', 'map', 'badge', 'diagnostics', 'purge', 'clear'];
@@ -113,8 +114,8 @@
   ];
 
   /* ==========================================================================
-     2. PROCEDURAL AUDIO ENGINE & ACOUSTIC PRESETS
-     ========================================================================= */
+     2. PROCEDURAL AUDIO ENGINE & PERSISTENCE
+     ========================================================================== */
   function ensureAudioReady() {
     try {
       if (!audioCtx) {
@@ -209,6 +210,7 @@
     const config = AUDIO_PRESETS[presetKey];
     if (!config) return;
     currentAudioPreset = presetKey;
+    try { localStorage.setItem(STORAGE_KEY_PRESET, presetKey); } catch (e) {}
 
     if (!audioCtx || !isPlayingAmbience) return;
 
@@ -255,7 +257,7 @@
     try {
       const now = audioCtx.currentTime;
 
-      // Lub
+      // Lub (First Thump)
       const osc1 = audioCtx.createOscillator();
       const gain1 = audioCtx.createGain();
       osc1.type = 'sine';
@@ -268,7 +270,7 @@
       osc1.start(now);
       osc1.stop(now + 0.23);
 
-      // Dub
+      // Dub (Second Thump)
       const osc2 = audioCtx.createOscillator();
       const gain2 = audioCtx.createGain();
       osc2.type = 'sine';
@@ -892,6 +894,9 @@
     const vector = params.get('vector') || 'ANOMALOUS PATHWAY';
     const reason = params.get('reason') || 'Mortality directives locked under high-tier clearance protocol.';
 
+    // Dynamically update document title for shared deep links
+    document.title = `PROJECT AEGIS // DOSSIER: ${subject.toUpperCase()} [${token}]`;
+
     const interceptModal = document.getElementById('interceptModal');
     const interceptSubject = document.getElementById('interceptSubject');
     const interceptTokenId = document.getElementById('interceptTokenId');
@@ -953,7 +958,7 @@
     };
 
     telemetryData.forEach(item => {
-      const text = item.demise || '';
+      const text = item.demise || item.reason || '';
       const matched = threatClassifications.find(t => t.regex.test(text));
       if (matched) {
         counts[matched.tag]++;
@@ -1022,7 +1027,7 @@
     };
 
     telemetryData.forEach(item => {
-      const sec = (item.sector || '').toUpperCase();
+      const sec = (item.sector || item.city || '').toUpperCase();
       Object.keys(sectorCounts).forEach(key => {
         if (sec.includes(key)) sectorCounts[key]++;
       });
@@ -1062,7 +1067,6 @@
       }
     } catch (e) {}
 
-    // Always merge fallback archive records so baseline IDs like '1084' always work
     const combinedData = [...telemetryData, ...FALLBACK_ARCHIVE];
 
     // 2. Multi-field flexible search
@@ -1083,7 +1087,6 @@
       const matchedVector = threatClassifications.find(t => t.regex.test(reasonText));
       vectorLabel = matchedVector ? matchedVector.label : 'ANOMALOUS PATHWAY';
     } else {
-      // Dynamic on-demand dossier synthesis for any custom query/number
       subjectName = `AGENT-${cleanSearch.toUpperCase()}`;
       designation = `AEGIS-SUB-${cleanSearch.toUpperCase()}//INTERCEPT`;
       reasonText = 'Demise telemetry reconstructed from orbital data fragment.';
@@ -1169,9 +1172,9 @@
 
     if (queryTag) {
       dataToRender = dataToRender.filter(item => {
-        const demiseText = (item.demise || '').toLowerCase();
-        const sectorText = (item.sector || '').toLowerCase();
-        const subjectText = (item.subject || '').toLowerCase();
+        const demiseText = (item.demise || item.reason || '').toLowerCase();
+        const sectorText = (item.sector || item.city || '').toLowerCase();
+        const subjectText = (item.subject || item.fullName || '').toLowerCase();
 
         const vectorMatch = threatClassifications.find(t => t.tag === queryTag);
         const regexMatches = vectorMatch ? vectorMatch.regex.test(demiseText) : false;
@@ -1193,17 +1196,18 @@
       const itemEl = document.createElement('div');
       itemEl.className = 'p-2 rounded bg-slate-900/60 border border-slate-800 text-[11px] font-mono transition hover:border-rose-900/60';
 
-      const matchedVector = threatClassifications.find(t => t.regex.test(item.demise || ''));
+      const demiseString = item.demise || item.reason || '';
+      const matchedVector = threatClassifications.find(t => t.regex.test(demiseString));
       const vectorLabel = matchedVector ? matchedVector.label : 'ANOMALOUS PATHWAY';
       const vectorColor = matchedVector ? matchedVector.color : '#34d399';
 
       itemEl.innerHTML = `
         <div class="flex flex-wrap justify-between text-slate-400 mb-1 text-[10px] gap-1">
-          <span class="text-rose-400 font-bold">[${(item.sector || 'SECTOR_CLASSIFIED').toUpperCase()}]</span>
+          <span class="text-rose-400 font-bold">[${(item.sector || item.city || 'SECTOR_CLASSIFIED').toUpperCase()}]</span>
           <span style="color: ${vectorColor};" class="font-semibold text-[9px] uppercase tracking-wider">${vectorLabel}</span>
-          <span class="text-slate-500">ID: ${item.subject || '---'}</span>
+          <span class="text-slate-500">ID: ${item.subject || item.fullName || '---'}</span>
         </div>
-        <p class="text-slate-300 italic leading-relaxed">"${item.demise || ''}"</p>
+        <p class="text-slate-300 italic leading-relaxed">"${demiseString}"</p>
       `;
       feedStream.appendChild(itemEl);
     });
@@ -1224,7 +1228,7 @@
       case 'help':
         reply.className = 'p-2.5 rounded bg-rose-950/20 border border-rose-900/40 text-rose-300 font-mono text-xs';
         reply.innerHTML = `
-          <div class="text-rose-400 font-bold mb-1.5 tracking-wider">[SYS_COMMAND_MATRIX // AEGIS v4.6]</div>
+          <div class="text-rose-400 font-bold mb-1.5 tracking-wider">[SYS_COMMAND_MATRIX // AEGIS v4.7]</div>
           <div class="space-y-1 text-[11px] text-slate-300">
             <div><strong class="text-white">feed [filter]</strong> — Stream telemetries ('feed martyrdom', 'feed void', 'feed alpha').</div>
             <div><strong class="text-white">stats [-clusters]</strong> — Inspect engine states or compile regional cluster distribution.</div>
@@ -1406,10 +1410,15 @@
     initHeaderVisualizer();
     initParticleCanvas();
 
-    // 3. Audio & SFX Toggles
+    // 3. Audio & SFX Toggles with Preset Persistence
     try {
       const savedSfx = localStorage.getItem(STORAGE_KEY_SFX);
       if (savedSfx !== null) sfxEnabled = savedSfx === 'true';
+
+      const savedPreset = localStorage.getItem(STORAGE_KEY_PRESET);
+      if (savedPreset && AUDIO_PRESETS[savedPreset]) {
+        currentAudioPreset = savedPreset;
+      }
     } catch (e) {}
 
     updateAmbienceUI(false);
@@ -1824,13 +1833,30 @@
     checkSubmissionCooldown();
   });
 
-  // Global Interaction & Keyboard Shortcuts
+  // Global Interaction & Keyboard Shortcuts (Including 'M' Panic Mute)
   document.addEventListener('keydown', (e) => {
     ensureAudioReady();
     const target = e.target;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+    const isInputActive = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+
+    if (isInputActive) {
       playTypingSound();
       triggerShockwave(window.innerWidth / 2, window.innerHeight * 0.75, 0.25);
+    }
+
+    // 'M' Key: Quick Audio Panic Mute
+    if ((e.key === 'm' || e.key === 'M') && !isInputActive) {
+      e.preventDefault();
+      ensureAudioReady();
+      playButtonClickSound();
+      if (isPlayingAmbience) {
+        stopSuspiciousMusic();
+        try { localStorage.setItem(STORAGE_KEY_AMBIENCE, 'false'); } catch (e) {}
+      } else {
+        startSuspiciousMusic();
+        try { localStorage.setItem(STORAGE_KEY_AMBIENCE, 'true'); } catch (e) {}
+      }
+      return;
     }
 
     if (e.key === '`' || e.key === '~') {
