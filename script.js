@@ -1044,9 +1044,14 @@
   }
 
   async function downloadBadgeBySubjectId(searchId) {
-    if (!searchId) return '<span class="text-yellow-400">> Usage: badge <subject_id_or_keyword></span>';
+    if (!searchId || !searchId.trim()) {
+      return '<span class="text-yellow-400">> Usage: badge <subject_id | number | keyword> (e.g., "badge 1084" or "badge alpha")</span>';
+    }
 
-    let telemetryData = FALLBACK_ARCHIVE;
+    const cleanSearch = searchId.toLowerCase().trim();
+    let telemetryData = [];
+
+    // 1. Fetch live telemetry with fallback merge
     try {
       const res = await fetch(GOOGLE_SCRIPT_WEBHOOK);
       if (res.ok) {
@@ -1057,30 +1062,45 @@
       }
     } catch (e) {}
 
-    const cleanSearch = searchId.toLowerCase().trim();
-    const found = telemetryData.find(item =>
-      (item.subject && item.subject.toLowerCase().includes(cleanSearch)) ||
-      (item.sector && item.sector.toLowerCase().includes(cleanSearch)) ||
-      (item.demise && item.demise.toLowerCase().includes(cleanSearch))
-    );
+    // Always merge fallback archive records so baseline IDs like '1084' always work
+    const combinedData = [...telemetryData, ...FALLBACK_ARCHIVE];
 
-    if (!found) {
-      return `<span class="text-rose-400">> No telemetry entry matching ID or query: [${searchId.toUpperCase()}]</span>`;
+    // 2. Multi-field flexible search
+    const found = combinedData.find(item => {
+      const subject = (item.subject || item.fullName || '').toLowerCase();
+      const sector = (item.sector || item.city || '').toLowerCase();
+      const demise = (item.demise || item.reason || '').toLowerCase();
+      return subject.includes(cleanSearch) || sector.includes(cleanSearch) || demise.includes(cleanSearch);
+    });
+
+    // 3. Fallback: If not in records, synthesize an on-demand classified token for that ID
+    let subjectName, designation, reasonText, vectorLabel;
+
+    if (found) {
+      subjectName = found.subject || found.fullName || `OPERATIVE-${cleanSearch.toUpperCase()}`;
+      designation = subjectName.startsWith('AEGIS-') ? subjectName : `AEGIS-SUB-${cleanSearch.toUpperCase()}//SEC-X`;
+      reasonText = found.demise || found.reason || 'Classified mortality sequence logged under emergency protocol.';
+      const matchedVector = threatClassifications.find(t => t.regex.test(reasonText));
+      vectorLabel = matchedVector ? matchedVector.label : 'ANOMALOUS PATHWAY';
+    } else {
+      // Dynamic on-demand dossier synthesis for any custom query/number
+      subjectName = `AGENT-${cleanSearch.toUpperCase()}`;
+      designation = `AEGIS-SUB-${cleanSearch.toUpperCase()}//INTERCEPT`;
+      reasonText = 'Demise telemetry reconstructed from orbital data fragment.';
+      vectorLabel = 'ANOMALOUS PATHWAY';
     }
 
-    const matchedVector = threatClassifications.find(t => t.regex.test(found.demise || ''));
-    const vectorLabel = matchedVector ? matchedVector.label : 'ANOMALOUS PATHWAY';
     const now = new Date().toISOString().replace('T', ' // ').slice(0, 22) + ' UTC';
 
     generateDossierPNG(
-      found.subject || 'CLASSIFIED AGENT',
-      `AEGIS-${found.subject || 'TARGET'}`,
+      subjectName,
+      designation,
       now,
-      found.demise || 'Classified mortality sequence.',
+      reasonText,
       vectorLabel
     );
 
-    return `<span class="text-emerald-400">> Extracted & rendered classified dossier for: <strong class="text-white">${found.subject || 'SUBJECT'}</strong> (.PNG download initiated)</span>`;
+    return `<span class="text-emerald-400">> Extracted & synthesized dossier for: <strong class="text-white">${designation}</strong> (.PNG download initiated)</span>`;
   }
 
   /* ==========================================================================
