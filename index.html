@@ -76,7 +76,7 @@
   <div class="scanlines"></div>
   <canvas id="particleCanvas"></canvas>
 
-  <!-- Responsive Header with Pinned Left Logo and Pinned Right Controls -->
+  <!-- Header with Pinned Left Logo and Pinned Right Controls -->
   <header class="relative z-50 border-b border-borderDim/70 bg-void/90 backdrop-blur-md px-3 sm:px-8 py-3 sticky top-0">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
       
@@ -89,7 +89,7 @@
         <div>
           <div class="flex items-center gap-1.5">
             <span class="font-cinzel tracking-wider text-slate-100 font-bold text-xs sm:text-base">PROJECT AEGIS</span>
-            <span class="text-[8px] sm:text-[9px] font-mono px-1 py-0.2 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">v4.2</span>
+            <span class="text-[8px] sm:text-[9px] font-mono px-1 py-0.2 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">v4.3</span>
           </div>
           <p class="text-[9px] font-mono text-slate-500 tracking-tight hidden sm:block">HERO TERMINATION MITIGATION PROTOCOL</p>
         </div>
@@ -97,7 +97,7 @@
 
       <!-- Right: Pinned Ambience + SFX Controls -->
       <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
-        <!-- Ambience Toggle with Audio Waveform Visualizer -->
+        <!-- Ambience Toggle with Waveform Visualizer -->
         <button 
           id="audioToggle" 
           type="button"
@@ -114,7 +114,7 @@
           type="button"
           class="px-2 sm:px-3 py-1.5 rounded border border-borderDim bg-panel/90 hover:bg-panel text-slate-300 text-[10px] sm:text-xs font-mono transition flex items-center gap-1.5 cursor-pointer select-none"
         >
-          <span id="sfxDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500 pointer-events-none"></span>
+          <span id="sfxDot" class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 pointer-events-none"></span>
           <span id="sfxText" class="pointer-events-none text-[10px] sm:text-xs">SFX: ON</span>
         </button>
       </div>
@@ -379,7 +379,7 @@
       </form>
     </div>
 
-    <!-- Bottom Footer Disclaimer -->
+    <!-- Bottom Disclaimer -->
     <div class="mt-5 text-center text-[10px] sm:text-xs font-mono text-slate-500 max-w-lg mx-auto">
       <span>All submissions are ingested into an encrypted private spreadsheet. No public viewing portal exists on this network.</span>
     </div>
@@ -391,7 +391,56 @@
     <span>[~] CODEX</span>
   </button>
 
-  <!-- Success Confirmation Modal -->
+  <!-- Phase 2: Remote Dossier Telemetry Intercept Modal (Deep-Link Viewer) -->
+  <div id="interceptModal" class="fixed inset-0 z-[250] bg-black/95 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 hidden font-mono select-none">
+    <div class="max-w-lg w-full bg-[#090d16] border border-rose-500/80 rounded-xl p-5 sm:p-7 relative shadow-[0_0_50px_rgba(225,29,72,0.35)] text-left overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-500 to-transparent animate-pulse"></div>
+
+      <div class="flex items-center justify-between border-b border-rose-950 pb-2.5 mb-4 text-[11px]">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+          <span class="text-rose-400 font-bold tracking-wider">[REMOTE TELEMETRY INTERCEPT]</span>
+        </div>
+        <span class="text-[10px] text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 px-2 py-0.5 rounded">CLEARANCE: GRANTED</span>
+      </div>
+
+      <!-- Scrambled / Decrypted Dossier Content -->
+      <div class="space-y-2.5 bg-black/60 border border-slate-800 p-4 rounded-lg text-xs">
+        <div>
+          <span class="text-slate-500 text-[10px] uppercase block">Subject Identity</span>
+          <span id="interceptSubject" class="text-rose-400 font-bold text-base tracking-wide">DECRYPTING...</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+          <div>
+            <span class="text-slate-500 text-[10px] uppercase block">Token ID</span>
+            <span id="interceptTokenId" class="text-slate-200 font-semibold">---</span>
+          </div>
+          <div>
+            <span class="text-slate-500 text-[10px] uppercase block">Vector Classification</span>
+            <span id="interceptVector" class="text-emerald-400 font-semibold">---</span>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-slate-800/80">
+          <span class="text-slate-500 text-[10px] uppercase block mb-1">Permitted Demise Directive</span>
+          <p id="interceptReason" class="text-slate-300 italic text-[11px] leading-relaxed bg-slate-950/70 p-2.5 rounded border border-slate-900">
+            "Awaiting decryption sequence..."
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions for the Remote Visitor -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4">
+        <button type="button" id="interceptExportBtn" class="py-2.5 px-3 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono tracking-wider transition uppercase flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>💾 Export Dossier (.PNG)</span>
+        </button>
+        <button type="button" id="interceptCloseBtn" class="py-2.5 px-3 rounded bg-rose-700 hover:bg-rose-600 text-white text-xs font-mono font-bold tracking-wider transition uppercase flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>Enter Project Aegis</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal with Tri-Action Buttons -->
   <div id="successModal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
     <div class="max-w-md w-full bg-panel border border-rose-600/80 rounded-xl p-5 sm:p-8 relative shadow-2xl text-center max-h-[90vh] overflow-y-auto">
       <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-rose-950/80 border border-rose-500/60 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-rose-950/60">
@@ -417,12 +466,16 @@
           <div><span class="text-slate-500">STATUS:</span> <span class="text-emerald-400 font-semibold">COMMITTED</span></div>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-          <button type="button" id="copyTokenBtn" class="w-full py-1.5 px-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1.5">
-            <span id="copyTokenText">📋 Copy Token</span>
+        <!-- Tri-Button Action Toolbar -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
+          <button type="button" id="copyTokenBtn" class="w-full py-1.5 px-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1 cursor-pointer">
+            <span id="copyTokenText">📋 Token</span>
           </button>
-          <button type="button" id="exportCardBtn" class="w-full py-1.5 px-2.5 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1.5">
-            <span id="exportCardText">💾 Export (.PNG)</span>
+          <button type="button" id="copyLinkBtn" class="w-full py-1.5 px-2 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1 cursor-pointer">
+            <span id="copyLinkText">🔗 Link</span>
+          </button>
+          <button type="button" id="exportCardBtn" class="w-full py-1.5 px-2 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-[10px] rounded tracking-wider uppercase transition flex items-center justify-center gap-1 cursor-pointer">
+            <span id="exportCardText">💾 .PNG</span>
           </button>
         </div>
       </div>
@@ -447,7 +500,7 @@
     </div>
   </div>
 
-  <!-- Mobile-Safe CODEX Terminal Drawer -->
+  <!-- CODEX Terminal Drawer -->
   <div id="codexDrawer" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-2.5 sm:p-4 hidden font-mono">
     <div class="w-full max-w-3xl bg-[#090d16] border border-rose-500/40 rounded-lg shadow-2xl overflow-hidden flex flex-col h-[82vh] sm:h-[520px]">
       
@@ -455,7 +508,7 @@
       <div class="px-3 sm:px-4 py-2 bg-slate-900/90 border-b border-rose-950 flex items-center justify-between text-[11px] sm:text-xs text-slate-400">
         <div class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-          <span class="text-rose-400 font-bold">AEGIS // CODEX v4.2</span>
+          <span class="text-rose-400 font-bold">AEGIS // CODEX v4.3</span>
         </div>
         <div class="flex items-center gap-3">
           <button type="button" id="codexHelpHint" class="text-rose-400 hover:text-rose-300 font-mono underline underline-offset-4 decoration-rose-500/40">HELP</button>
