@@ -180,3 +180,21 @@ select.hud-input option {
     font-size: 10px !important;
   }
 }
+
+/* Phase 3: Dynamic CRT Vector Glitch */
+body.vector-glitch-active {
+  filter: contrast(140%) brightness(120%) hue-rotate(15deg);
+  transform: translateX(-1px) skewX(-0.5deg);
+  transition: none;
+}
+
+body.glitch-active {
+  animation: crtGlitchPulse 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes crtGlitchPulse {
+  0% { filter: contrast(200%) brightness(150%) invert(20%); transform: skew(1.2deg); }
+  30% { filter: contrast(120%) hue-rotate(90deg); transform: translate(-3px, 2px); }
+  60% { filter: contrast(180%) drop-shadow(-4px 0px #e11d48); transform: translate(2px, -1px); }
+  100% { filter: none; transform: none; }
+}

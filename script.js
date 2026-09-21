@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.3
-   Phase 2 Complete: Deep-Link Intercept & Matrix Decrypt System
+   PROJECT AEGIS // MOTOR-COGNITION TERMINAL ENGINE v4.4
+   Phase 3 Complete: Audio Escalation, Heartbeat Engine & CRT Glitch
    ========================================================================== */
 
 (function () {
@@ -23,6 +23,7 @@
   let analyser = null;
   let audioDataArray = null;
 
+  // Soundscape oscillators & filters
   let oscRoot = null;
   let oscTritone = null;
   let oscShimmer = null;
@@ -30,6 +31,11 @@
   let tapeLfoGain = null;
   let filterNode = null;
   let tensionTimer = null;
+
+  // Phase 3: Heartbeat Engine & Dynamic Audio Tension
+  let heartbeatTimer = null;
+  let currentCharacterTension = 0;
+  let lastActiveVectorTag = '';
 
   let shockwaveActive = false;
   let shockwaveRadius = 0;
@@ -99,7 +105,7 @@
   ];
 
   /* ==========================================================================
-     2. AUDIO ENGINE
+     2. AUDIO ENGINE (Procedural Suspicion & Phase 3 Sub-Bass Heartbeat)
      ========================================================================== */
   function ensureAudioReady() {
     try {
@@ -184,6 +190,9 @@
 
       isPlayingAmbience = true;
       updateAmbienceUI(true);
+
+      // Re-apply any active typing tension level
+      applyAudioTension(currentCharacterTension);
     } catch (e) {}
   }
 
@@ -216,10 +225,77 @@
     } catch (e) {}
   }
 
+  // Phase 3: Procedural Dual-Thump Sub-Bass Heartbeat
+  function playHeartbeatThump() {
+    if (!audioCtx || !isPlayingAmbience) return;
+    try {
+      const now = audioCtx.currentTime;
+
+      // Lub (First Thump - 52Hz)
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(54, now);
+      osc1.frequency.exponentialRampToValueAtTime(32, now + 0.18);
+      gain1.gain.setValueAtTime(0.28, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc1.connect(gain1);
+      gain1.connect(masterGain);
+      osc1.start(now);
+      osc1.stop(now + 0.23);
+
+      // Dub (Second Thump - 42Hz, 240ms later)
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(46, now + 0.24);
+      osc2.frequency.exponentialRampToValueAtTime(26, now + 0.44);
+      gain2.gain.setValueAtTime(0.22, now + 0.24);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+      osc2.connect(gain2);
+      gain2.connect(masterGain);
+      osc2.start(now + 0.24);
+      osc2.stop(now + 0.5);
+    } catch (e) {}
+  }
+
+  // Phase 3: Dynamic Audio Escalation based on confession length
+  function applyAudioTension(charCount) {
+    currentCharacterTension = charCount;
+    if (!audioCtx || !isPlayingAmbience || !filterNode) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      // Interpolate filter cutoff from 280 Hz up to 680 Hz based on 0-400 characters
+      const targetFrequency = Math.min(680, 280 + (charCount / 400) * 400);
+      filterNode.frequency.cancelScheduledValues(now);
+      filterNode.frequency.linearRampToValueAtTime(targetFrequency, now + 0.5);
+
+      // Heartbeat pulse frequency escalation
+      if (charCount >= 180) {
+        if (!heartbeatTimer) {
+          playHeartbeatThump();
+          // Rate quickens as count approaches 400
+          const intervalMs = Math.max(1200, 2200 - ((charCount - 180) / 220) * 1000);
+          heartbeatTimer = setInterval(playHeartbeatThump, intervalMs);
+        }
+      } else {
+        if (heartbeatTimer) {
+          clearInterval(heartbeatTimer);
+          heartbeatTimer = null;
+        }
+      }
+    } catch (e) {}
+  }
+
   function stopSuspiciousMusic() {
     if (tensionTimer) {
       clearInterval(tensionTimer);
       tensionTimer = null;
+    }
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
     }
     isPlayingAmbience = false;
     updateAmbienceUI(false);
@@ -463,7 +539,9 @@
         this.color = Math.random() > 0.85 ? '225, 29, 72' : '100, 116, 139';
       }
       update(audioBoost) {
-        this.y += (this.speedY + this.vy) - (audioBoost * 1.8);
+        // Tension adds slight particle agitation
+        const tensionAgitation = (currentCharacterTension / 400) * 0.6;
+        this.y += (this.speedY + this.vy) - (audioBoost * 1.8) - tensionAgitation;
         this.x += (this.speedX + this.vx);
 
         if (this.vx) this.vx *= 0.94;
@@ -531,14 +609,24 @@
   }
 
   /* ==========================================================================
-     5. DOSSIER BADGE BUILDER & DIAGNOSTICS
+     5. FORM LOGIC & PHASE 3 VECTOR GLITCH
      ========================================================================== */
   function updateCount() {
     const reason = document.getElementById('reason');
     const charCounter = document.getElementById('charCounter');
     if (reason && charCounter) {
-      charCounter.textContent = `${reason.value.length} logged`;
+      const len = reason.value.length;
+      charCounter.textContent = `${len} logged`;
+      // Escalate procedural tension
+      applyAudioTension(len);
     }
+  }
+
+  function triggerVectorGlitch() {
+    document.body.classList.add('vector-glitch-active');
+    setTimeout(() => {
+      document.body.classList.remove('vector-glitch-active');
+    }, 180);
   }
 
   function updateThreatVector(text) {
@@ -550,10 +638,20 @@
       labelEl.textContent = "AWAITING TELEMETRY...";
       labelEl.style.color = "#94a3b8";
       dotEl.className = "w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse";
+      lastActiveVectorTag = '';
       return;
     }
 
     const matched = threatClassifications.find(item => item.regex.test(text));
+    const newTag = matched ? matched.tag : 'anomalous';
+
+    // Phase 3: Screen micro-glitch & telemetry click on vector shift
+    if (newTag !== lastActiveVectorTag) {
+      lastActiveVectorTag = newTag;
+      triggerVectorGlitch();
+      playButtonClickSound();
+    }
+
     if (matched) {
       labelEl.textContent = matched.label;
       labelEl.style.color = matched.color;
@@ -724,7 +822,7 @@
   }
 
   /* ==========================================================================
-     6. PHASE 2: DEEP-LINK ENCODER & MATRIX SCRAMBLE DECRYPTER
+     6. PHASE 2: DEEP-LINK ENCODER & MATRIX DECRYPT
      ========================================================================== */
   function generateShareableDossierURL(name, tokenId, vector, reason) {
     const base = window.location.origin + window.location.pathname;
@@ -969,6 +1067,7 @@
         reply.innerHTML = `
           <div>AUDIO ENGINE: <span class="text-emerald-400">${isPlayingAmbience ? 'ACTIVE' : 'STANDBY'}</span></div>
           <div>SFX BUS: <span class="text-emerald-400">${sfxEnabled ? 'SYNTHESIZED' : 'MUTED'}</span></div>
+          <div>TENSION LEVEL: <span class="text-rose-400">${currentCharacterTension} / 400 CHARS</span></div>
           <div>PARTICLE CORES: <span class="text-emerald-400">${particles.length} ACTIVE ASH PARTICLES</span></div>
           <div>COOLDOWN STATUS: <span class="text-emerald-400">${cooldownActive ? 'ARMED' : 'CLEAR'}</span></div>
         `;
@@ -989,6 +1088,7 @@
           <div class="text-[11px] text-slate-300 space-y-0.5">
             <div>AUDIO SAMPLE RATE: <span class="text-slate-100">${sampleRate}</span></div>
             <div>ANALYSER BINS: <span class="text-slate-100">${analyser ? analyser.frequencyBinCount : 'N/A'}</span></div>
+            <div>HEARTBEAT BUS: <span class="text-slate-100">${heartbeatTimer ? 'ACTIVE PULSE' : 'STANDBY'}</span></div>
             <div>RATE LIMITER: <span class="text-slate-100">${remainingCooldown}</span></div>
             <div>COMMAND HISTORY: <span class="text-slate-100">${commandHistory.length} ENTRIES</span></div>
           </div>
@@ -1036,7 +1136,7 @@
      9. DOM INITIALIZATION
      ========================================================================== */
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Populate Dropdowns
+    // 1. Dropdowns
     const dobDaySelect = document.getElementById('dobDay');
     if (dobDaySelect) {
       dobDaySelect.innerHTML = '<option value="" class="bg-panel text-slate-400">Day</option>';
@@ -1250,7 +1350,6 @@
         if (tokenSubjectId) tokenSubjectId.textContent = dossier.subjectId;
         if (tokenTimestamp) tokenTimestamp.textContent = dossier.timestamp;
 
-        // Copy Raw Token
         if (copyTokenBtn) {
           copyTokenBtn.onclick = () => {
             navigator.clipboard.writeText(dossier.formattedText).then(() => {
@@ -1263,7 +1362,6 @@
           };
         }
 
-        // Copy Shareable Deep-Link (Phase 2)
         if (copyLinkBtn) {
           copyLinkBtn.onclick = () => {
             const shareUrl = generateShareableDossierURL(
@@ -1282,7 +1380,6 @@
           };
         }
 
-        // Export PNG Card
         if (exportCardBtn) {
           exportCardBtn.onclick = () => {
             playButtonClickSound();
@@ -1310,6 +1407,9 @@
 
         activateSubmissionCooldown(60);
 
+        // Reset audio tension back to baseline on submission
+        applyAudioTension(0);
+
         if (successModal) successModal.classList.remove('hidden');
       });
     }
@@ -1323,6 +1423,7 @@
         if (heroForm) heroForm.reset();
         updateCount();
         updateThreatVector('');
+        applyAudioTension(0);
       });
     }
 
@@ -1335,6 +1436,7 @@
         if (heroForm) heroForm.reset();
         updateCount();
         updateThreatVector('');
+        applyAudioTension(0);
         document.getElementById('fullName')?.focus();
         window.scrollTo({ top: 180, behavior: 'smooth' });
       });
@@ -1485,7 +1587,6 @@
       });
     }
 
-    // 8. Execute Phase 2 Intercept Check & Rate Limit Status
     checkAndHandleDeepLink();
     checkSubmissionCooldown();
   });
@@ -1529,7 +1630,6 @@
   window.addEventListener('keydown', autoStartAudioOnGesture, { once: true });
   window.addEventListener('scroll', autoStartAudioOnGesture, { once: true });
 
-  // Clock
   setInterval(() => {
     const clockEl = document.getElementById('liveClock');
     if (clockEl) {
